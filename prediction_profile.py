@@ -4,15 +4,14 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 
 
-class Prediction:
+class PredictionProfile:
     """Class to predict users' sentiment, gender and country"""
 
     def __init__(self, map):
         """this class needs a dictionary with TweetID, Sentiment, TopicID, Country, Gender, URLs, Text, Vector"""
         self.map = map
 
-    @property
-    def gender_prediction(self):
+    def gender_prediction(self, vector):
         """Method to predict user's gender using a SVM classifier"""
         X = self.map['Vector']
         y = self.map['Gender']
@@ -20,10 +19,9 @@ class Prediction:
         model = svm.SVC(kernel='linear')
         model.fit(X, y)
 
-        return model.predict(np.zeros(300).reshape(1, -1))
+        return model.predict(vector.reshape(1, -1))
 
-    @property
-    def sentiment_prediction(self):
+    def sentiment_prediction(self, vector):
         """Method to predict user's sentiment using a CNN"""
         X = self.map['Vector']
         y = self.map['Sentiment']
@@ -31,10 +29,9 @@ class Prediction:
         clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
         clf.fit(X, y)
 
-        return clf.predict(np.zeros(300).reshape(1, -1))
+        return clf.predict(vector.reshape(1, -1))
 
-    @property
-    def country_prediction(self):
+    def country_prediction(self, vector):
         """Method to predict user's country using a Naive Bayes network"""
         X = self.map['Vector']
         y = self.map['Country']
@@ -42,7 +39,7 @@ class Prediction:
         gnb = GaussianNB()
         gnb.fit(X, y)
 
-        return gnb.predict(np.zeros(300).reshape(1, -1))
+        return gnb.predict(vector.reshape(1, -1))
 
     @staticmethod
     def parsing_corpus(path):
@@ -72,7 +69,8 @@ class Prediction:
 
 if __name__ == '__main__':
     # truc.txt est un fichier test où il y a les 10eres lignes du corpus
-    map = parsing_corpus('truc.txt')
-    pred = Prediction(map)
+    map = PredictionProfile.parsing_corpus('truc.txt')
+    print(map)
+    pred = PredictionProfile(map)
 
-    print(pred.gender_prediction)
+    print(pred.gender_prediction(np.zeros(300)))
