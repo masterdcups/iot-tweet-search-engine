@@ -1,5 +1,7 @@
 import numpy as np
 
+from prediction_profile import PredictionProfile
+
 
 class User:
 	fname = 'users_profile.txt'
@@ -20,16 +22,16 @@ class User:
 			self.id = id
 			self.load()
 
-	def update_profile(self, vec, loc, gender, emotion):
+	def update_profile(self, vec):
 
 		self.nb_click += 1
 		for i in range(len(self.vec)):
 			self.vec[i] = (self.vec[i] * (self.nb_click - 1)) / self.nb_click + (vec[i] / self.nb_click)
 
-		# todo :
-		self.localisation = loc
-		self.gender = gender
-		self.emotion = emotion
+		pp = PredictionProfile()
+		self.localisation = pp.country_prediction(self.vec)
+		self.gender = pp.gender_prediction(self.vec)
+		self.emotion = pp.sentiment_prediction(self.vec)
 
 	def save(self):
 		users_data = {}  # user_id => line
