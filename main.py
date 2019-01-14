@@ -24,7 +24,6 @@ def tweet2vec(tweet, model):
 	if len(sentence_vector) == 0:
 		sentence_vector.append(np.zeros_like(model.wv["tax"]))
 
-
 	return np.mean(sentence_vector, axis=0)
 
 
@@ -37,21 +36,21 @@ if __name__ == '__main__':
 	tweet_cliked_3 = tweet2vec(corpus[3], model)
 
 	u1 = User()
-	u1.update_profile(tweet_cliked_1, 'None', 'None', 'None')
+	u1.update_profile(tweet_cliked_1)
 	u1.save()
 
 	u2 = User()
-	u2.update_profile(tweet_cliked_2, 'None', 'None', 'None')
+	u2.update_profile(tweet_cliked_2)
 	u2.save()
 
 	print(u2.vec)
 
 	u3 = User()
-	u3.update_profile(tweet_cliked_3, 'None', 'None', 'None')
+	u3.update_profile(tweet_cliked_3)
 	u3.save()
 
 	u2 = User(2)
-	u2.update_profile(tweet_cliked_3, 'None', 'None', 'None')
+	u2.update_profile(tweet_cliked_3)
 	u2.save()
 
 	print(u2.vec)
