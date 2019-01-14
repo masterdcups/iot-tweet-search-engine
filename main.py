@@ -24,6 +24,7 @@ def tweet2vec(tweet, model):
 	if len(sentence_vector) == 0:
 		sentence_vector.append(np.zeros_like(model.wv["tax"]))
 
+
 	return np.mean(sentence_vector, axis=0)
 
 
