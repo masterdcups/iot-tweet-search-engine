@@ -1,0 +1,12 @@
+TweetID	Sentiment	TopicID	Country	Gender	URLs
+1093771552	neutral	0	us	andy	https://twitter.com/whatsshakin
+1099404026	neutral	None	ca	male	https://en.wikipedia.org/wiki/Internet_of_Things
+1099881858	neutral	2	gb	andy
+1104012014	neutral	1	be	male
+1104556075	neutral	0	it	andy
+1104557021	neutral	2	it	andy
+1104680554	neutral	2	us	male	https://techcrunch.com/2009/01/08/microsoft-releases-tag-its-second-iphone-application/
+1105498266	neutral	1	us	male	http://dogearnation.com
+1108665373	neutral	None	fr	male	https://www.mbed.com/en/EN/6lowpan/faq.htm/
+1110778330	neutral	3	us	male
+1112956638	neutral	2	be	andy	
