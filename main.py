@@ -4,7 +4,7 @@ import re
 import gensim
 import numpy as np
 import preprocessor as p
-from nltk.corpus import stopwords
+import nltk
 from spellchecker import SpellChecker
 
 from user import User
@@ -34,12 +34,24 @@ def remove_stopwords_spelling_mistakes(spell, tokens):
     for token in tokens:
         # correction of spelling mistakes
         token = spell.correction(token)
-        if token not in stopwords.words('english'):
+        if token not in nltk.corpus.stopwords.words('english'):
             clean_tokens.append(token)
     return clean_tokens
 
 
 def read_corpus(fname):
+    # todo : find another solution !
+    import ssl
+
+    try:
+        _create_unverified_https_context = ssl._create_unverified_context
+    except AttributeError:
+        pass
+    else:
+        ssl._create_default_https_context = _create_unverified_https_context
+
+    nltk.download('stopwords')
+
     # load spell checker
     spell = SpellChecker()
     # load lemmatizer
@@ -80,6 +92,12 @@ def tweet2vec(tweet, model):
 
 if __name__ == '__main__':
     corpus = list(read_corpus('corpus/tweets.txt'))
+
+    for tweet in corpus:
+        print(tweet)
+
+    exit()
+
     model = gensim.models.KeyedVectors.load_word2vec_format('corpus/GoogleNews-vectors-negative300.bin', binary=True)
 
     tweet_cliked_1 = tweet2vec(corpus[1], model)
