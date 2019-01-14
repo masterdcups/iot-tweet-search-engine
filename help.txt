@@ -8,5 +8,8 @@ click on New Branch
 enter the name of the branch (without capital) and click on ok
 
 - To puch : ctrl + K
-
 - To pull : ctrl + T
+
+To run the code :
+- create a corpus directory at the root of the project
+- add files GoogleNews-vectors-negative300.bin (w2v pretrains vectors) and tweets.txt (corpus)
