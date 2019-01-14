@@ -1,0 +1,22 @@
+- To add a library
+in the terminal :
+    pip install namelib
+    pip freeze >requirements.txt
+
+- To create a new branch
+click on master in the bottom right corner
+click on New Branch
+enter the name of the branch (without capital) and click on ok
+
+- To commit or commit and puch = send code : ctrl + K (! not to do on the branch master)
+- To puch : ctrl + maj + K (think to pull before)
+- To pull = receive code : ctrl + T
+
+- To run the code :
+create a corpus directory at the root of the project
+add files GoogleNews-vectors-negative300.bin (w2v pretrains vectors) and tweets.txt (corpus)
+
+- color code :
+    green : file created only on our computer
+    blue : modification not comitted
+    red : not in git
