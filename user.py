@@ -67,7 +67,7 @@ class User:
 			items = l.split('\t')
 			if int(items[0]) == self.id:
 				self.nb_click = int(items[1])
-				self.vec = [float(x) for x in items[2][1:-1].split(', ')]
+				self.vec = np.asarray([float(x) for x in items[2][1:-1].split(', ')])
 				self.localisation = items[3]
 				self.gender = items[4]
 				self.emotion = items[5]

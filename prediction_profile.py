@@ -12,16 +12,16 @@ class PredictionProfile:
     def gender_prediction(self, vector):
         """Method to predict user's gender using a SVM classifier"""
 
-        return self.model_prediction.gender_model().predict(vector.reshape(1, -1))
+        return self.model_prediction.gender_model().predict(vector.reshape(1, -1))[0]
 
     def sentiment_prediction(self, vector):
         """Method to predict user's sentiment using a CNN"""
 
-        return self.model_prediction.sentiment_model().predict(vector.reshape(1, -1))
+        return self.model_prediction.sentiment_model().predict(vector.reshape(1, -1))[0]
 
     def country_prediction(self, vector):
         """Method to predict user's country using a Naive Bayes network"""
-        return self.model_prediction.country_model().predict(vector.reshape(1, -1))
+        return self.model_prediction.country_model().predict(vector.reshape(1, -1))[0]
 
 
 if __name__ == '__main__':
