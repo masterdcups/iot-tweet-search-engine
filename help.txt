@@ -1,14 +1,15 @@
 - To add a library
-we add it in the file requirements.txt
-in the terminal : pip freeze >requirements.txt
+in the terminal :
+    pip install namelib
+    pip freeze >requirements.txt
 
 - To create a new branch
 click on master in the bottom right corner
 click on New Branch
 enter the name of the branch (without capital) and click on ok
 
-- To puch : ctrl + K
-- To pull : ctrl + T
+- To puch = send code : ctrl + K (! not to do on the branch master)
+- To pull = receive code : ctrl + T
 
 To run the code :
 - create a corpus directory at the root of the project
