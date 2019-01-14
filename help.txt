@@ -9,7 +9,7 @@ click on New Branch
 enter the name of the branch (without capital) and click on ok
 
 - To commit or commit and puch = send code : ctrl + K (! not to do on the branch master)
-- To puch : ctrl + maj + K
+- To puch : ctrl + maj + K (think to pull before)
 - To pull = receive code : ctrl + T
 
 - To run the code :
