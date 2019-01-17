@@ -7,7 +7,7 @@ class PredictionProfile:
 
     def __init__(self):
         """this class needs a dictionary with TweetID, Sentiment, TopicID, Country, Gender, URLs, Text, Vector"""
-        self.model_prediction = ModelPrediction()
+        self.model_prediction = ModelPrediction('corpus/fake-iot-corpus.tsv')
 
     def gender_prediction(self, vector):
         """Method to predict user's gender using a SVM classifier"""
