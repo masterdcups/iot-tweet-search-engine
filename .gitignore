@@ -105,3 +105,4 @@ venv.bak/
 /users_profile.txt
 /corpus/
 /.idea/
+/saved_models/
