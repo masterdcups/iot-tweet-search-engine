@@ -4,6 +4,7 @@ import numpy as np
 from sklearn import svm
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
+from sklearn.model_selection import GridSearchCV
 
 
 class ModelPrediction:
@@ -33,7 +34,6 @@ class ModelPrediction:
             y = self.map['Gender']
 
             model = svm.SVC(kernel='linear')
-            model.fit(X, y)
 
             dump(model, full_path)
         else:
@@ -83,6 +83,40 @@ class ModelPrediction:
 
         return gnb
 
+    def tweak_hyperparameters(self, type_model):
+        self.map = ModelPrediction.parsing_corpus(self.corpus_path)
+        if type_model == "SVM":
+            X = self.map['Vector']
+            y = self.map['Gender']
+
+            model = svm.SVC()
+            param_grid = [
+                {'C': [1, 10, 100, 1000], 'kernel': ['linear']},
+                {'C': [1, 10, 100, 1000], 'gamma': [0.001, 0.0001], 'kernel': ['rbf']},
+            ]
+            clf = GridSearchCV(model, param_grid, n_jobs=-1, cv=3)
+            clf.fit(X, y)
+
+            # Best parameter set
+            print('Best parameters found:\n', clf.best_params_)
+        else:
+            X = self.map['Vector']
+            y = self.map['Sentiment']
+
+            model = MLPClassifier(max_iter=100)
+            param_grid = {
+                'hidden_layer_sizes': [(50, 50, 50), (50, 100, 50), (100,)],
+                'activation': ['tanh', 'relu'],
+                'solver': ['sgd', 'adam'],
+                'alpha': [0.0001, 0.05],
+                'learning_rate': ['constant', 'adaptive'],
+            }
+            clf = GridSearchCV(model, param_grid, n_jobs=-1, cv=3)
+            clf.fit(X, y)
+
+            # Best parameter set
+            print('Best parameters found:\n', clf.best_params_)
+
     @staticmethod
     def parsing_corpus(path):
         # Les lignes en commentaires devront être décommentées lorsque le corpus sera complété avec le texte des tweets et les vecteurs associés
@@ -111,6 +145,11 @@ class ModelPrediction:
 
 if __name__ == '__main__':
     model = ModelPrediction()
-    print(model.gender_model().predict(np.zeros(300).reshape(1, -1)))
-    print(model.sentiment_model().predict(np.zeros(300).reshape(1, -1)))
-    print(model.country_model().predict(np.zeros(300).reshape(1, -1)))
+    model.tweak_hyperparameters("SVM")
+    model.tweak_hyperparameters("MLP")
+    # print(model.gender_model())
+    # print(model.sentiment_model())
+    # print(model.country_model())
+    # print(model.gender_model().predict(np.zeros(300).reshape(1, -1)))
+    # print(model.sentiment_model().predict(np.zeros(300).reshape(1, -1)))
+    # print(model.country_model().predict(np.zeros(300).reshape(1, -1)))
