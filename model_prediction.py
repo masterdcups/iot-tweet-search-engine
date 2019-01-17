@@ -6,82 +6,86 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import GridSearchCV
 
+from parser import Parser
+
 
 class ModelPrediction:
-    path_gend_mod = 'gender_model.joblib'
-    path_sent_mod = 'sentiment_model.joblib'
-    path_coun_mod = 'country_model.joblib'
+	path_gend_mod = 'gender_model.joblib'
+	path_sent_mod = 'sentiment_model.joblib'
+	path_coun_mod = 'country_model.joblib'
 
-    def __init__(self, dir_path='saved_models', corpus_path='truc.txt'):
-        # truc.txt est un fichier test où il y a les 10eres lignes du corpus
-        self.dir_path = dir_path
-        self.map = None
-        self.corpus_path = corpus_path
+	def __init__(self, dir_path='saved_models', corpus_path='truc.txt'):
+		# truc.txt est un fichier test où il y a les 10eres lignes du corpus
+		self.dir_path = dir_path
+		self.map = None
+		self.corpus_path = corpus_path
 
-        if not os.path.exists(dir_path):
-            os.mkdir(dir_path)
+		if not os.path.exists(dir_path):
+			os.mkdir(dir_path)
 
-    def gender_model(self, file_path=path_gend_mod):
-        """Method to create model prediction user's gender using a SVM classifier"""
-        full_path = os.path.join(self.dir_path, file_path)
+	def load_corpus(self):
+		if self.map is None:
+			self.map = Parser.parsing_iot_corpus(self.corpus_path)
 
-        if not os.path.exists(full_path):
+	def gender_model(self, file_path=path_gend_mod):
+		"""Method to create model prediction user's gender using a SVM classifier"""
+		full_path = os.path.join(self.dir_path, file_path)
 
-            if self.map is None:
-                self.map = ModelPrediction.parsing_corpus(self.corpus_path)
+		if not os.path.exists(full_path):
 
-            X = self.map['Vector']
-            y = self.map['Gender']
+			self.load_corpus()
 
-            model = svm.SVC(kernel='linear')
+			X = self.map['Vector']
+			y = self.map['Gender']
 
-            dump(model, full_path)
-        else:
-            model = load(full_path)
+			model = svm.SVC(kernel='linear')
+			model.fit(X, y)
 
-        return model
+			dump(model, full_path)
+		else:
+			model = load(full_path)
 
-    def sentiment_model(self, file_path=path_sent_mod):
-        """Method to create model prediction user's sentiment using a CNN"""
-        full_path = os.path.join(self.dir_path, file_path)
+		return model
 
-        if not os.path.exists(full_path):
+	def sentiment_model(self, file_path=path_sent_mod):
+		"""Method to create model prediction user's sentiment using a CNN"""
+		full_path = os.path.join(self.dir_path, file_path)
 
-            if self.map is None:
-                self.map = ModelPrediction.parsing_corpus(self.corpus_path)
+		if not os.path.exists(full_path):
 
-            X = self.map['Vector']
-            y = self.map['Sentiment']
+			self.load_corpus()
 
-            clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
-            clf.fit(X, y)
+			X = self.map['Vector']
+			y = self.map['Sentiment']
 
-            dump(clf, full_path)
-        else:
-            clf = load(full_path)
+			clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
+			clf.fit(X, y)
 
-        return clf
+			dump(clf, full_path)
+		else:
+			clf = load(full_path)
 
-    def country_model(self, file_path=path_coun_mod):
-        """Method to create model prediction user's country using a Naive Bayes network"""
-        full_path = os.path.join(self.dir_path, file_path)
+		return clf
 
-        if not os.path.exists(full_path):
+	def country_model(self, file_path=path_coun_mod):
+		"""Method to create model prediction user's country using a Naive Bayes network"""
+		full_path = os.path.join(self.dir_path, file_path)
 
-            if self.map is None:
-                self.map = ModelPrediction.parsing_corpus(self.corpus_path)
+		if not os.path.exists(full_path):
 
-            X = self.map['Vector']
-            y = self.map['Country']
+			self.load_corpus()
 
-            gnb = GaussianNB()
-            gnb.fit(X, y)
+			X = self.map['Vector']
+			y = self.map['Country']
 
-            dump(gnb, full_path)
-        else:
-            gnb = load(full_path)
+			gnb = GaussianNB()
+			gnb.fit(X, y)
 
-        return gnb
+			dump(gnb, full_path)
+		else:
+			gnb = load(full_path)
+
+		return gnb
 
     def tweak_hyperparameters(self, type_model):
         self.map = ModelPrediction.parsing_corpus(self.corpus_path)
