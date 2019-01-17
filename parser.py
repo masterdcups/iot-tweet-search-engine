@@ -84,8 +84,8 @@ class Parser:
 		# Les deux lignes avant "fichier.close()" devront alors être supprimées
 		map = {}
 		with open(path, "r") as fichier:
-			line = fichier.readline().replace('\n', '').split('\t')
-			for key in line:
+			header = fichier.readline().replace('\n', '').split('\t')
+			for key in header:
 				map[key] = []
 			map['Vector'] = []
 			for line in fichier:
@@ -95,10 +95,10 @@ class Parser:
 				map['TopicID'] += [tweet[2]]
 				map['Country'] += [tweet[3]]
 				map['Gender'] += [tweet[4]]
-				# map['URLs'] += tweet[5:-2]
-				# map['Text'] += Parser.clean_tweet(tweet[-2])
-				# map['Vector'] += tweet[-1]
-				map['URLs'] += [tweet[5:]]
-				map['Vector'] += [np.zeros(300)]
+				map['URLs'] += tweet[5:-2]
+				map['Text'] += [Parser.clean_tweet(tweet[-2])]
+				map['Vector'].append(np.asarray([float(x) for x in tweet[-1][1:-1].split(', ')]))
+				# map['URLs'] += [tweet[5:]]
+				# map['Vector'] += [np.zeros(300)]
 		fichier.close()
 		return map
