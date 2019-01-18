@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from joblib import dump, load
 from sklearn.ensemble import RandomForestClassifier
@@ -6,9 +8,14 @@ from parser import Parser
 
 
 class TopicsClassifier:
+	model_name = 'topic_model.joblib'
 
-	def __init__(self):
+	def __init__(self, dir_path='saved_models'):
 		self.model = None
+
+		if not os.path.exists(dir_path):
+			os.mkdir(dir_path)
+		self.model_path = os.path.join(dir_path, TopicsClassifier.model_name)
 
 	def train(self):
 		# todo : to change with the real corpus
@@ -24,18 +31,20 @@ class TopicsClassifier:
 		# self.model = KNeighborsClassifier(n_neighbors=3)
 		self.model.fit(X, y)  # probability = True
 
-	def save(self, path):
+	def save(self):
 		assert (self.model is not None)
 
-		dump(self.model, path)
+		dump(self.model, self.model_path)
 
-	def load(self, path):
-		self.model = load(path)
+	def load(self):
+		self.model = load(self.model_path)
 
 	def predict(self, vector):
-		# todo : save or load model !
-		if self.model is None:
+		if not os.path.exists(self.model_path):
 			self.train()
+			self.save()
+		else:
+			self.load()
 
 		return self.model.predict_proba(vector)
 
