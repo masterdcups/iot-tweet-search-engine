@@ -1,10 +1,10 @@
-from joblib import dump, load
 import os
-import numpy as np
+
+from joblib import dump, load
 from sklearn import svm
+from sklearn.model_selection import GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import GridSearchCV
 
 from parser import Parser
 
@@ -17,15 +17,15 @@ class ModelPrediction:
 	def __init__(self, corpus_path, dir_path='saved_models'):
 		# truc.txt est un fichier test où il y a les 10eres lignes du corpus
 		self.dir_path = dir_path
-		self.map = None
+		self.tweets = None
 		self.corpus_path = corpus_path
 
 		if not os.path.exists(dir_path):
 			os.mkdir(dir_path)
 
 	def load_corpus(self):
-		if self.map is None:
-			self.map = Parser.parsing_iot_corpus(self.corpus_path)
+		if self.tweets is None:
+			self.tweets = Parser.parsing_iot_corpus(self.corpus_path)
 
 	def gender_model(self, file_path=path_gend_mod):
 		"""Method to create model prediction user's gender using a SVM classifier"""
@@ -35,8 +35,8 @@ class ModelPrediction:
 
 			self.load_corpus()
 
-			X = self.map['Vector']
-			y = self.map['Gender']
+			X = [t['Vector'] for t in self.tweets]
+			y = [t['Gender'] for t in self.tweets]
 
 			model = svm.SVC(kernel='linear')
 			model.fit(X, y)
@@ -55,8 +55,8 @@ class ModelPrediction:
 
 			self.load_corpus()
 
-			X = self.map['Vector']
-			y = self.map['Sentiment']
+			X = [t['Vector'] for t in self.tweets]
+			y = [t['Sentiment'] for t in self.tweets]
 
 			clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
 			clf.fit(X, y)
@@ -75,8 +75,8 @@ class ModelPrediction:
 
 			self.load_corpus()
 
-			X = self.map['Vector']
-			y = self.map['Country']
+			X = [t['Vector'] for t in self.tweets]
+			y = [t['Country'] for t in self.tweets]
 
 			gnb = GaussianNB()
 			gnb.fit(X, y)
@@ -91,8 +91,8 @@ class ModelPrediction:
 		self.load_corpus()
 
 		if type_model == "SVM":
-			X = self.map['Vector']
-			y = self.map['Gender']
+			X = [t['Vector'] for t in self.tweets]
+			y = [t['Gender'] for t in self.tweets]
 
 			model = svm.SVC()
 			param_grid = [
@@ -105,8 +105,8 @@ class ModelPrediction:
 			# Best parameter set
 			print('Best parameters found:\n', clf.best_params_)
 		else:
-			X = self.map['Vector']
-			y = self.map['Sentiment']
+			X = [t['Vector'] for t in self.tweets]
+			y = [t['Sentiment'] for t in self.tweets]
 
 			model = MLPClassifier(max_iter=100)
 			param_grid = {

@@ -1,11 +1,11 @@
 import csv
-import numpy as np
 import re
 
-import nltk
-from spellchecker import SpellChecker
-import preprocessor
 import gensim
+import nltk
+import numpy as np
+import preprocessor
+from spellchecker import SpellChecker
 
 
 def replace_abbreviations(tokens):
@@ -39,6 +39,9 @@ def remove_stopwords_spelling_mistakes(spell, tokens):
 
 class Parser:
 
+	def __init__(self):
+		self.load_nltk()
+
 	@staticmethod
 	def clean_tweet(tweet_text):
 		"""
@@ -46,18 +49,6 @@ class Parser:
 		:param tweet_text:
 		:return: array of tokens words
 		"""
-
-		# todo : find another solution for nltk download !
-		import ssl
-
-		try:
-			_create_unverified_https_context = ssl._create_unverified_context
-		except AttributeError:
-			pass
-		else:
-			ssl._create_default_https_context = _create_unverified_https_context
-
-		nltk.download('stopwords')
 
 		# load spell checker
 		spell = SpellChecker()
@@ -80,25 +71,41 @@ class Parser:
 
 	@staticmethod
 	def parsing_iot_corpus(path):
-		# Les lignes en commentaires devront être décommentées lorsque le corpus sera complété avec le texte des tweets et les vecteurs associés
-		# Les deux lignes avant "fichier.close()" devront alors être supprimées
-		map = {}
-		with open(path, "r") as fichier:
-			header = fichier.readline().replace('\n', '').split('\t')
-			for key in header:
-				map[key] = []
-			map['Vector'] = []
-			for line in fichier:
+		parser = Parser()
+
+		tweets = []
+
+		with open(path, "r") as file:
+			file.readline()
+
+			for line in file:
 				tweet = line.replace('\n', '').split("\t")
-				map['TweetID'] += [tweet[0]]
-				map['Sentiment'] += [tweet[1]]
-				map['TopicID'] += [tweet[2]]
-				map['Country'] += [tweet[3]]
-				map['Gender'] += [tweet[4]]
-				map['URLs'] += tweet[5:-2]
-				map['Text'] += [Parser.clean_tweet(tweet[-2])]
-				map['Vector'].append(np.asarray([float(x) for x in tweet[-1][1:-1].split(', ')]))
-				# map['URLs'] += [tweet[5:]]
-				# map['Vector'] += [np.zeros(300)]
-		fichier.close()
-		return map
+				tweet_infos = {}
+				tweet_infos['TweetID'] = tweet[0]
+				tweet_infos['Sentiment'] = tweet[1]
+				tweet_infos['TopicID'] = tweet[2]
+				tweet_infos['Country'] = tweet[3]
+				tweet_infos['Gender'] = tweet[4]
+				tweet_infos['URLs'] = tweet[5:-2]
+				tweet_infos['Text'] = parser.clean_tweet(tweet[-2])
+				tweet_infos['Vector'] = np.asarray([float(x) for x in tweet[-1][1:-1].split(', ')])
+				tweets.append(tweet_infos)
+
+		file.close()
+		return tweets
+
+	def get_composant(self, column):
+		pass
+
+	def load_nltk(self):
+		# todo : find another solution for nltk download !
+		import ssl
+
+		try:
+			_create_unverified_https_context = ssl._create_unverified_context
+		except AttributeError:
+			pass
+		else:
+			ssl._create_default_https_context = _create_unverified_https_context
+
+		nltk.download('stopwords')

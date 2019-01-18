@@ -102,7 +102,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-/users_profile.txt
+/users_profile.*
 /corpus/
 /.idea/
 /saved_models/

@@ -1,12 +1,14 @@
 import numpy as np
 
 from prediction_profile import PredictionProfile
+from topics_classifier import TopicsClassifier
 
 
 class User:
-	fname = 'users_profile.txt'
+	fname = 'users_profile.tsv'
 
-	def __init__(self, id=None, vec_size=300):
+	def __init__(self, id=None, nb_click=None, vector=None, localisation=None, gender=None, emotion=None,
+				 topic_vector=None, vec_size=300):
 		next_id = User.next_id()
 
 		if id is None:
@@ -16,11 +18,19 @@ class User:
 			self.localisation = 'None'
 			self.gender = 'None'
 			self.emotion = 'None'
+			self.topic_vector = None
 		else:
 			if id >= next_id:
 				raise Exception('This id does not exist.')
 			self.id = id
-			self.load()
+			self.vec = vector
+			self.nb_click = nb_click
+			self.localisation = localisation
+			self.gender = gender
+			self.emotion = emotion
+			self.topic_vector = topic_vector
+
+	# self.load()
 
 	def update_profile(self, vec):
 
@@ -29,9 +39,11 @@ class User:
 			self.vec[i] = (self.vec[i] * (self.nb_click - 1)) / self.nb_click + (vec[i] / self.nb_click)
 
 		pp = PredictionProfile()
+		tcf = TopicsClassifier()
 		self.localisation = pp.country_prediction(self.vec)
 		self.gender = pp.gender_prediction(self.vec)
 		self.emotion = pp.sentiment_prediction(self.vec)
+		self.topic_vector = tcf.predict(vec.reshape(1, -1))[0]
 
 	def save(self):
 		users_data = {}  # user_id => line
@@ -46,7 +58,8 @@ class User:
 		f.close()
 
 		to_insert = str(self.id) + '\t' + str(self.nb_click) + '\t' + str(
-			list(self.vec)) + '\t' + self.localisation + '\t' + self.gender + '\t' + self.emotion + '\n'
+			list(self.vec)) + '\t' + self.localisation + '\t' + self.gender + '\t' + self.emotion + '\t' + str(
+			list(self.topic_vector)) + '\n'
 
 		# if the id is not in the file
 		if self.id not in users_data:
@@ -71,6 +84,7 @@ class User:
 				self.localisation = items[3]
 				self.gender = items[4]
 				self.emotion = items[5]
+				self.topic_vector = np.asarray([float(x) for x in items[6][1:-2].split(', ')])
 				f.close()
 				return
 
@@ -81,3 +95,22 @@ class User:
 		if len(contents) == 0:
 			return 1
 		return int(contents[-1].split('\t')[0]) + 1
+
+	@staticmethod
+	def get_all_users():
+		users = []
+		file = open(User.fname, "r")
+		for line in file:
+			items = line.split('\t')
+			u = User(
+				id=int(items[0]),
+				nb_click=int(items[1]),
+				vector=np.asarray([float(x) for x in items[2][1:-1].split(', ')]),
+				localisation=items[3],
+				gender=items[4],
+				emotion=items[5],
+				topic_vector=np.asarray([float(x) for x in items[6][1:-2].split(', ')])
+			)
+			users.append(u)
+		file.close()
+		return users
