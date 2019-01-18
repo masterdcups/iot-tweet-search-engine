@@ -9,6 +9,11 @@ from spellchecker import SpellChecker
 
 
 def replace_abbreviations(tokens):
+	"""
+	Replace the abbreviations (OMG -> Oh My God) based on the dictionary in slang.txt
+	:param tokens: words of the tweet
+	:return: words with abbreviations replaced by their meaning
+	"""
 	j = 0
 	file_name = "corpus/slang.txt"
 	with open(file_name, 'r') as myCSVfile:
@@ -28,6 +33,12 @@ def replace_abbreviations(tokens):
 
 
 def remove_stopwords_spelling_mistakes(spell, tokens):
+	"""
+	Remove stopwords and corrects spelling mistakes
+	:param spell: Object to correct spelling mistakes
+	:param tokens: words of the tweet
+	:return: words cleaned and corrected
+	"""
 	clean_tokens = []
 	for token in tokens:
 		# correction of spelling mistakes
@@ -53,9 +64,6 @@ class Parser:
 		# load spell checker
 		spell = SpellChecker()
 
-		# load lemmatizer
-		# lmtzr = WordNetLemmatizer()
-
 		tokens = []
 		preprocessor.set_options(preprocessor.OPT.URL, preprocessor.OPT.MENTION, preprocessor.OPT.RESERVED,
 								 preprocessor.OPT.EMOJI, preprocessor.OPT.SMILEY)
@@ -65,17 +73,21 @@ class Parser:
 
 		tokens = replace_abbreviations(tokens)
 		tokens = remove_stopwords_spelling_mistakes(spell, tokens)
-		# lemmatized_tokens = [lmtzr.lemmatize(word, 'v') for word in tokens]
 
 		return tokens
 
 	@staticmethod
-	def parsing_iot_corpus(path):
+	def parsing_iot_corpus(corpus_path):
+		"""
+		Parse the corpus and return the list of tweets with characteristics
+		:param corpus_path: path of the corpus
+		:return: array of dict (tweets)
+		"""
 		parser = Parser()
 
 		tweets = []
 
-		with open(path, "r") as file:
+		with open(corpus_path, "r") as file:
 			file.readline()
 
 			for line in file:
@@ -86,8 +98,9 @@ class Parser:
 				tweet_infos['TopicID'] = tweet[2]
 				tweet_infos['Country'] = tweet[3]
 				tweet_infos['Gender'] = tweet[4]
-				tweet_infos['URLs'] = tweet[5:-2]
-				tweet_infos['Text'] = parser.clean_tweet(tweet[-2])
+				tweet_infos['URLs'] = tweet[5:-3]
+				tweet_infos['Text'] = parser.clean_tweet(tweet[-3])
+				tweet_infos['Author'] = tweet[-2]
 				tweet_infos['Vector'] = np.asarray([float(x) for x in tweet[-1][1:-1].split(', ')])
 				tweets.append(tweet_infos)
 
