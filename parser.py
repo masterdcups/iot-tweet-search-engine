@@ -140,13 +140,17 @@ class Parser:
 
 		corpus = open(corpus_path, 'r', encoding='utf-8')
 		new_corpus = open(new_corpus_path, 'w', encoding='utf-8')
-		new_corpus.write(corpus.readline()[:-1] + '\tVector\n')
 
-		for line in corpus:
-			new_corpus.write(
-				line[:-1] + '\t' + str(list(tweet2vec(parser.clean_tweet(line.split('\t')[-2]), model))) + '\n')
-
+		lines = corpus.readlines()
 		corpus.close()
+
+		lines[0] = lines[0][:-1] + '\tVector\n'
+
+		for i in range(1, len(lines)):
+			lines[i] = lines[i][:-1] + '\t' + str(
+				list(tweet2vec(parser.clean_tweet(lines[i].split('\t')[-2]), model))) + '\n'
+
+		new_corpus.write(''.join(lines))
 		new_corpus.close()
 
 	def load_nltk(self):
