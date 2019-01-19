@@ -138,8 +138,8 @@ class Parser:
 		model = gensim.models.KeyedVectors.load_word2vec_format('corpus/GoogleNews-vectors-negative300.bin',
 																binary=True)
 
-		corpus = open(corpus_path, 'r')
-		new_corpus = open(new_corpus_path, 'w')
+		corpus = open(corpus_path, 'r', encoding='utf-8')
+		new_corpus = open(new_corpus_path, 'w', encoding='utf-8')
 		new_corpus.write(corpus.readline()[:-1] + '\tVector\n')
 
 		for line in corpus:
@@ -165,3 +165,4 @@ class Parser:
 
 if __name__ == '__main__':
 	Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv')
+# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
