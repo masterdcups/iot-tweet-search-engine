@@ -48,13 +48,29 @@ def remove_stopwords_spelling_mistakes(spell, tokens):
 	return clean_tokens
 
 
+def tweet2vec(tweet_text, model):
+	sentence_vector = []
+
+	for word in tweet_text:
+		try:
+			sentence_vector.append(model.wv[word])
+
+		except KeyError:
+			pass
+
+	# if a tweet word do not appear in the model we put a zeros vector
+	if len(sentence_vector) == 0:
+		sentence_vector.append(np.zeros_like(model.wv["tax"]))
+
+	return np.mean(sentence_vector, axis=0)
+
+
 class Parser:
 
 	def __init__(self):
 		self.load_nltk()
 
-	@staticmethod
-	def clean_tweet(tweet_text):
+	def clean_tweet(self, tweet_text):
 		"""
 		Taking a raw tweet, return a cleaned list of tweets tokens
 		:param tweet_text:
@@ -110,6 +126,29 @@ class Parser:
 	def get_composant(self, column):
 		pass
 
+	@staticmethod
+	def add_vector_to_corpus(corpus_path, new_corpus_path):
+		"""
+		Create a new Vector column on the corpus
+		:param corpus_path:
+		:param new_corpus_path:
+		:return:
+		"""
+		parser = Parser()
+		model = gensim.models.KeyedVectors.load_word2vec_format('corpus/GoogleNews-vectors-negative300.bin',
+																binary=True)
+
+		corpus = open(corpus_path, 'r')
+		new_corpus = open(new_corpus_path, 'w')
+		new_corpus.write(corpus.readline()[:-1] + '\tVector\n')
+
+		for line in corpus:
+			new_corpus.write(
+				line[:-1] + '\t' + str(list(tweet2vec(parser.clean_tweet(line.split('\t')[-2]), model))) + '\n')
+
+		corpus.close()
+		new_corpus.close()
+
 	def load_nltk(self):
 		# todo : find another solution for nltk download !
 		import ssl
@@ -122,3 +161,7 @@ class Parser:
 			ssl._create_default_https_context = _create_unverified_https_context
 
 		nltk.download('stopwords')
+
+
+if __name__ == '__main__':
+	Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv')
