@@ -1,25 +1,5 @@
-import numpy as np
-
 from parser import Parser
 from user import User
-
-
-def tweet2vec(tweet_text, model):
-	sentence_vector = []
-
-	for word in tweet_text:
-		try:
-			sentence_vector.append(model.wv[word])
-
-		except KeyError:
-			pass
-
-	# if a tweet word do not appear in the model we put a zeros vector
-	if len(sentence_vector) == 0:
-		sentence_vector.append(np.zeros_like(model.wv["tax"]))
-
-	return np.mean(sentence_vector, axis=0)
-
 
 if __name__ == '__main__':
 	corpus = Parser.parsing_iot_corpus('corpus/fake-iot-corpus.tsv')
