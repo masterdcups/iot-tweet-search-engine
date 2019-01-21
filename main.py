@@ -1,29 +1,16 @@
 from parser import Parser
-from user import User
+from query_influencer_detection import QueryInfluencerDetection
+from topics_classifier import TopicsClassifier
 
 if __name__ == '__main__':
-	corpus = Parser.parsing_iot_corpus('corpus/fake-iot-corpus.tsv')
+	parser = Parser()
+	cleaned_tweet = parser.clean_tweet('smart watch')
+	tweet_vec = parser.tweet2vec(cleaned_tweet)
+	print(tweet_vec)
 
-	print(corpus)
+	clf = TopicsClassifier()
+	topic_vec = clf.predict(tweet_vec.reshape(1, -1))
 
-	# model = gensim.models.KeyedVectors.load_word2vec_format('corpus/GoogleNews-vectors-negative300.bin', binary=True)
-	#
-	# tweet_cliked_1 = tweet2vec(corpus[1]['Text'], model)
-	# tweet_cliked_2 = tweet2vec(corpus[2]['Text'], model)
-	# tweet_cliked_3 = tweet2vec(corpus[3]['Text'], model)
-
-	tweet_cliked_1 = corpus[1]['Vector']
-	tweet_cliked_2 = corpus[2]['Vector']
-	tweet_cliked_3 = corpus[3]['Vector']
-
-	u1 = User()
-	u1.update_profile(tweet_cliked_1)
-	u1.save()
-
-	u2 = User()
-	u2.update_profile(tweet_cliked_2)
-	u2.save()
-
-	u3 = User()
-	u3.update_profile(tweet_cliked_3)
-	u3.save()
+	qid = QueryInfluencerDetection()
+	influencers = qid.get_influencers(topic_vec)
+	print(influencers)

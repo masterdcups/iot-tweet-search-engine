@@ -48,27 +48,14 @@ def remove_stopwords_spelling_mistakes(spell, tokens):
 	return clean_tokens
 
 
-def tweet2vec(tweet_text, model):
-	sentence_vector = []
 
-	for word in tweet_text:
-		try:
-			sentence_vector.append(model.wv[word])
-
-		except KeyError:
-			pass
-
-	# if a tweet word do not appear in the model we put a zeros vector
-	if len(sentence_vector) == 0:
-		sentence_vector.append(np.zeros_like(model.wv["tax"]))
-
-	return np.mean(sentence_vector, axis=0)
 
 
 class Parser:
 
 	def __init__(self):
 		self.load_nltk()
+		self.model = None
 
 	def clean_tweet(self, tweet_text):
 		"""
@@ -93,9 +80,10 @@ class Parser:
 		return tokens
 
 	@staticmethod
-	def parsing_iot_corpus(corpus_path):
+	def parsing_iot_corpus(corpus_path, clean_tweet=True):
 		"""
 		Parse the corpus and return the list of tweets with characteristics
+		:param clean_tweet: boolean clean the text of the tweets with nltk
 		:param corpus_path: path of the corpus
 		:return: array of dict (tweets)
 		"""
@@ -115,7 +103,7 @@ class Parser:
 				tweet_infos['Country'] = tweet[3]
 				tweet_infos['Gender'] = tweet[4]
 				tweet_infos['URLs'] = tweet[5:-3]
-				tweet_infos['Text'] = parser.clean_tweet(tweet[-3])
+				tweet_infos['Text'] = parser.clean_tweet(tweet[-3]) if clean_tweet else tweet[-3]
 				tweet_infos['Author'] = tweet[-2]
 				tweet_infos['Vector'] = np.asarray([float(x) for x in tweet[-1][1:-1].split(', ')])
 				tweets.append(tweet_infos)
@@ -125,6 +113,28 @@ class Parser:
 
 	def get_composant(self, column):
 		pass
+
+	def tweet2vec(self, tweet_text):
+		sentence_vector = []
+		self.load_w2v_model()
+
+		for word in tweet_text:
+			try:
+				sentence_vector.append(self.model.wv[word])
+
+			except KeyError:
+				pass
+
+		# if a tweet word do not appear in the model we put a zeros vector
+		if len(sentence_vector) == 0:
+			sentence_vector.append(np.zeros_like(self.model.wv["tax"]))
+
+		return np.mean(sentence_vector, axis=0)
+
+	def load_w2v_model(self):
+		if self.model is None:
+			self.model = gensim.models.KeyedVectors.load_word2vec_format('corpus/GoogleNews-vectors-negative300.bin',
+																		 binary=True)
 
 	@staticmethod
 	def add_vector_to_corpus(corpus_path, new_corpus_path, write_every=1000):
@@ -136,8 +146,7 @@ class Parser:
 		:return:
 		"""
 		parser = Parser()
-		model = gensim.models.KeyedVectors.load_word2vec_format('corpus/GoogleNews-vectors-negative300.bin',
-																binary=True)
+		parser.load_w2v_model()
 
 		print('GoogleNews-vectors LOADED')
 
@@ -153,7 +162,7 @@ class Parser:
 		for i in range(1, len(lines)):
 
 			new_lines.append(lines[i][:-1] + '\t' + str(
-				list(tweet2vec(parser.clean_tweet(lines[i].split('\t')[-2]), model))) + '\n')
+				list(parser.tweet2vec(parser.clean_tweet(lines[i].split('\t')[-2])))) + '\n')
 
 			if i % write_every == 0:
 				new_corpus.write(''.join(new_lines[(last_written + 1):]))

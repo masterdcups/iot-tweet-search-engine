@@ -1,7 +1,8 @@
+import os
+
 import networkx as nx
 import numpy as np
 
-from parser import Parser
 from prediction_profile import PredictionProfile
 from topics_classifier import TopicsClassifier
 
@@ -66,6 +67,7 @@ class User:
 		"""
 		users_data = {}  # user_id => line
 
+		self.create_files()
 		f = open(User.user_fname if type(self.id) is int else User.author_fname, "r")
 		contents = f.readlines()
 		i = 0
@@ -95,6 +97,7 @@ class User:
 		"""Load the user from the coresponding file of do nothing"""
 		assert self.id is not None
 
+		self.create_files()
 		f = open(User.user_fname if type(self.id) is int else User.author_fname, "r")
 		for l in f:
 			items = l.split('\t')
@@ -145,14 +148,25 @@ class User:
 		file.close()
 		return users
 
+	def create_files(self):
+		"""
+		Create the users and authors files if they don't exists
+		:return:
+		"""
+		if type(self.id) is int and not os.path.exists(User.user_fname):
+			open(User.user_fname, 'w+')
+
+		if type(self.id) is str and not os.path.exists(User.author_fname):
+			open(User.author_fname, 'w+')
+
 	@staticmethod
-	def create_authors():
+	def create_authors(corpus):
 		"""
 		Generate the authors_profile.tsv file
 		To perform just ONE time
 		:return:
 		"""
-		for tweet in Parser.parsing_iot_corpus('corpus/fake-iot-corpus.tsv'):
+		for tweet in corpus:
 			u = User(tweet['Author'])
 			u.load()
 			u.update_profile(tweet['Vector'], predict=False)
