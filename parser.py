@@ -127,9 +127,10 @@ class Parser:
 		pass
 
 	@staticmethod
-	def add_vector_to_corpus(corpus_path, new_corpus_path):
+	def add_vector_to_corpus(corpus_path, new_corpus_path, write_every=1000):
 		"""
 		Create a new Vector column on the corpus
+		:param write_every: write in the final file every x lines
 		:param corpus_path:
 		:param new_corpus_path:
 		:return:
@@ -138,19 +139,28 @@ class Parser:
 		model = gensim.models.KeyedVectors.load_word2vec_format('corpus/GoogleNews-vectors-negative300.bin',
 																binary=True)
 
+		print('GoogleNews-vectors LOADED')
+
 		corpus = open(corpus_path, 'r', encoding='utf-8')
 		new_corpus = open(new_corpus_path, 'w', encoding='utf-8')
 
 		lines = corpus.readlines()
 		corpus.close()
-
-		lines[0] = lines[0][:-1] + '\tVector\n'
+		new_lines = []
+		last_written = -1
+		new_lines.append(lines[0][:-1] + '\tVector\n')
 
 		for i in range(1, len(lines)):
-			lines[i] = lines[i][:-1] + '\t' + str(
-				list(tweet2vec(parser.clean_tweet(lines[i].split('\t')[-2]), model))) + '\n'
 
-		new_corpus.write(''.join(lines))
+			new_lines.append(lines[i][:-1] + '\t' + str(
+				list(tweet2vec(parser.clean_tweet(lines[i].split('\t')[-2]), model))) + '\n')
+
+			if i % write_every == 0:
+				new_corpus.write(''.join(new_lines[(last_written + 1):]))
+				last_written = i
+				print(str(last_written) + '/' + str(len(lines)) + ' treated')
+
+		new_corpus.write(''.join(new_lines[(last_written + 1):]))
 		new_corpus.close()
 
 	def load_nltk(self):
@@ -168,5 +178,5 @@ class Parser:
 
 
 if __name__ == '__main__':
-	Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv')
-# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
+	# Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv', write_every=3)
+	Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
