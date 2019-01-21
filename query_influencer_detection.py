@@ -9,6 +9,7 @@ class QueryInfluencerDetection:
 	def __init__(self):
 		self.topic_vector = None
 		self.authors = User.get_all_authors()
+		self.users_topic_vec = [u.topic_vector for u in self.authors]
 
 	def get_influencers(self, topic_vector, percentage_top_user=.5):
 		"""
@@ -17,8 +18,8 @@ class QueryInfluencerDetection:
 		:param percentage_top_user: (float) percentage of users considered
 		:return: a sorted array of
 		"""
-		users_topic_vec = [u.topic_vector for u in self.authors]
-		cosine_sim = cosine_similarity(users_topic_vec, topic_vector.reshape(1, -1))
+
+		cosine_sim = cosine_similarity(self.users_topic_vec, topic_vector.reshape(1, -1))
 
 		results = []
 		for i in range(len(cosine_sim)):

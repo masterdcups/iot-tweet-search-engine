@@ -1,4 +1,3 @@
-import csv
 import re
 
 import gensim
@@ -8,54 +7,16 @@ import preprocessor
 from spellchecker import SpellChecker
 
 
-def replace_abbreviations(tokens):
-	"""
-	Replace the abbreviations (OMG -> Oh My God) based on the dictionary in slang.txt
-	:param tokens: words of the tweet
-	:return: words with abbreviations replaced by their meaning
-	"""
-	j = 0
-	file_name = "corpus/slang.txt"
-	with open(file_name, 'r') as myCSVfile:
-		# Reading file as CSV with delimiter as "=", so that abbreviation are stored in row[0] and phrases in row[1]
-		data_from_file = csv.reader(myCSVfile, delimiter="=")
-		for token in tokens:
-			# Removing Special Characters.
-			_token = re.sub('[^a-zA-Z0-9-_.]', '', token)
-			for row in data_from_file:
-				# Check if selected word matches short forms[LHS] in text file.
-				if token.upper() == row[0]:
-					# If match found replace it with its Abbreviation in text file.
-					tokens[j] = row[1]
-			j = j + 1
-		myCSVfile.close()
-	return gensim.utils.simple_preprocess(' '.join(tokens))
-
-
-def remove_stopwords_spelling_mistakes(spell, tokens):
-	"""
-	Remove stopwords and corrects spelling mistakes
-	:param spell: Object to correct spelling mistakes
-	:param tokens: words of the tweet
-	:return: words cleaned and corrected
-	"""
-	clean_tokens = []
-	for token in tokens:
-		# correction of spelling mistakes
-		token = spell.correction(token)
-		if token not in nltk.corpus.stopwords.words('english'):
-			clean_tokens.append(token)
-	return clean_tokens
-
-
-
-
-
 class Parser:
 
 	def __init__(self):
 		self.load_nltk()
 		self.model = None
+		self.abbreviations = None
+		self.spell_check = None
+
+		preprocessor.set_options(preprocessor.OPT.URL, preprocessor.OPT.MENTION, preprocessor.OPT.RESERVED,
+								 preprocessor.OPT.EMOJI, preprocessor.OPT.SMILEY)
 
 	def clean_tweet(self, tweet_text):
 		"""
@@ -64,20 +25,73 @@ class Parser:
 		:return: array of tokens words
 		"""
 
-		# load spell checker
-		spell = SpellChecker()
-
-		tokens = []
-		preprocessor.set_options(preprocessor.OPT.URL, preprocessor.OPT.MENTION, preprocessor.OPT.RESERVED,
-								 preprocessor.OPT.EMOJI, preprocessor.OPT.SMILEY)
 		tweet = preprocessor.clean(tweet_text)
-		hashtags = list(part[1:] for part in tweet.split() if part.startswith('#'))
-		tokens += gensim.utils.simple_preprocess(tweet) + gensim.utils.simple_preprocess(' '.join(hashtags))
+		tokens = [word[1:] if word.startswith('#') else word for word in tweet.split(' ')]
 
-		tokens = replace_abbreviations(tokens)
-		tokens = remove_stopwords_spelling_mistakes(spell, tokens)
+		tokens = self.replace_abbreviations(tokens)
+		tokens = self.remove_stopwords_spelling_mistakes(tokens)
+		tokens = gensim.utils.simple_preprocess(' '.join(tokens))
 
 		return tokens
+
+	def load_spell_check(self):
+		if self.spell_check is not None:
+			return
+
+		self.spell_check = SpellChecker()
+
+	def load_abbreviations(self):
+		if self.abbreviations is not None:
+			return
+
+		file_name = "corpus/slang.txt"
+		file = open(file_name, 'r')
+		self.abbreviations = [line[:-1].split('=') for line in file.readlines()]
+		file.close()
+
+	# with open(file_name, 'r') as myCSVfile:
+	# 	# Reading file as CSV with delimiter as "=", so that abbreviation are stored in row[0] and phrases in row[1]
+	# 	self.abbreviations = csv.reader(myCSVfile, delimiter="=")
+	#
+	# myCSVfile.close()
+
+	def replace_abbreviations(self, tokens):
+		"""
+		Replace the abbreviations (OMG -> Oh My God) based on the dictionary in slang.txt
+		:param tokens: words of the tweet
+		:return: words with abbreviations replaced by their meaning
+		"""
+
+		self.load_abbreviations()
+
+		for i in range(len(tokens)):
+			# Removing Special Characters.
+			_token = re.sub('[^a-zA-Z0-9-_.]', '', tokens[i])
+			for row in self.abbreviations:
+				# Check if selected word matches short forms[LHS] in text file.
+				if tokens[i].upper() == row[0]:
+					# If match found replace it with its Abbreviation in text file.
+					tokens[i] = row[1]
+
+		return tokens
+
+	def remove_stopwords_spelling_mistakes(self, tokens):
+		"""
+		Remove stopwords and corrects spelling mistakes
+		:param spell: Object to correct spelling mistakes
+		:param tokens: words of the tweet
+		:return: words cleaned and corrected
+		"""
+
+		self.load_spell_check()
+
+		clean_tokens = []
+		for token in tokens:
+			# correction of spelling mistakes
+			token = self.spell_check.correction(token)
+			if token not in nltk.corpus.stopwords.words('english'):
+				clean_tokens.append(token)
+		return clean_tokens
 
 	@staticmethod
 	def parsing_iot_corpus(corpus_path, clean_tweet=True):
@@ -132,9 +146,11 @@ class Parser:
 		return np.mean(sentence_vector, axis=0)
 
 	def load_w2v_model(self):
-		if self.model is None:
-			self.model = gensim.models.KeyedVectors.load_word2vec_format('corpus/GoogleNews-vectors-negative300.bin',
-																		 binary=True)
+		if self.model is not None:
+			return
+
+		self.model = gensim.models.KeyedVectors.load_word2vec_format('corpus/GoogleNews-vectors-negative300.bin',
+																	 binary=True)
 
 	@staticmethod
 	def add_vector_to_corpus(corpus_path, new_corpus_path, write_every=1000):

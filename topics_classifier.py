@@ -37,6 +37,9 @@ class TopicsClassifier:
 		dump(self.model, self.model_path)
 
 	def load(self):
+		if self.model is not None:
+			return
+
 		self.model = load(self.model_path)
 
 	def predict(self, vector):
