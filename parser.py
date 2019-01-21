@@ -1,5 +1,3 @@
-import re
-
 import gensim
 import nltk
 import numpy as np
@@ -46,7 +44,11 @@ class Parser:
 
 		file_name = "corpus/slang.txt"
 		file = open(file_name, 'r')
-		self.abbreviations = [line[:-1].split('=') for line in file.readlines()]
+		self.abbreviations = {}
+		for line in file.readlines():
+			parts = line[:-1].split('=')
+			self.abbreviations[parts[0].upper()] = parts[1]
+
 		file.close()
 
 	def replace_abbreviations(self, tokens):
@@ -59,13 +61,7 @@ class Parser:
 		self.load_abbreviations()
 
 		for i in range(len(tokens)):
-			# Removing Special Characters.
-			_token = re.sub('[^a-zA-Z0-9-_.]', '', tokens[i])
-			for row in self.abbreviations:
-				# Check if selected word matches short forms[LHS] in text file.
-				if tokens[i].upper() == row[0]:
-					# If match found replace it with its Abbreviation in text file.
-					tokens[i] = row[1]
+			tokens[i] = self.abbreviations[tokens[i]] if tokens[i] in self.abbreviations else tokens[i]
 
 		return tokens
 
@@ -77,15 +73,9 @@ class Parser:
 		:return: words cleaned and corrected
 		"""
 
-		self.load_spell_check()
+		# self.load_spell_check()
 
-		clean_tokens = []
-		for token in tokens:
-			# correction of spelling mistakes
-			token = self.spell_check.correction(token)
-			if token not in nltk.corpus.stopwords.words('english'):
-				clean_tokens.append(token)
-		return clean_tokens
+		return list(filter(lambda token: token not in nltk.corpus.stopwords.words('english'), tokens))
 
 	@staticmethod
 	def parsing_iot_corpus(corpus_path, clean_tweet=True):
@@ -110,9 +100,10 @@ class Parser:
 				tweet_infos['TopicID'] = tweet[2]
 				tweet_infos['Country'] = tweet[3]
 				tweet_infos['Gender'] = tweet[4]
-				tweet_infos['URLs'] = tweet[5:-3]
-				tweet_infos['Text'] = parser.clean_tweet(tweet[-3]) if clean_tweet else tweet[-3]
-				tweet_infos['Author'] = tweet[-2]
+				tweet_infos['URLs'] = tweet[5:-4]
+				tweet_infos['Text'] = tweet[-4]
+				tweet_infos['Author'] = tweet[-3]
+				tweet_infos['CleanedText'] = tweet[-2]
 				tweet_infos['Vector'] = np.asarray([float(x) for x in tweet[-1][1:-1].split(', ')])
 				tweets.append(tweet_infos)
 
@@ -166,12 +157,13 @@ class Parser:
 		corpus.close()
 		new_lines = []
 		last_written = -1
-		new_lines.append(lines[0][:-1] + '\tVector\n')
+		new_lines.append(lines[0][:-1] + '\tCleanedText\tVector\n')
 
 		for i in range(1, len(lines)):
-
-			new_lines.append(lines[i][:-1] + '\t' + str(
-				list(parser.tweet2vec(parser.clean_tweet(lines[i].split('\t')[-2])))) + '\n')
+			cleaned_tweet = parser.clean_tweet(lines[i].split('\t')[-2])
+			new_lines.append(
+				lines[i][:-1] + '\t' + ' '.join(cleaned_tweet) + '\t' + str(
+					list(parser.tweet2vec(cleaned_tweet))) + '\n')
 
 			if i % write_every == 0:
 				new_corpus.write(''.join(new_lines[(last_written + 1):]))
@@ -198,5 +190,5 @@ class Parser:
 if __name__ == '__main__':
 	# Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv', write_every=3)
 	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
-	Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector-test.tsv',
-								write_every=50)
+	Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv',
+								write_every=5000)
