@@ -49,12 +49,6 @@ class Parser:
 		self.abbreviations = [line[:-1].split('=') for line in file.readlines()]
 		file.close()
 
-	# with open(file_name, 'r') as myCSVfile:
-	# 	# Reading file as CSV with delimiter as "=", so that abbreviation are stored in row[0] and phrases in row[1]
-	# 	self.abbreviations = csv.reader(myCSVfile, delimiter="=")
-	#
-	# myCSVfile.close()
-
 	def replace_abbreviations(self, tokens):
 		"""
 		Replace the abbreviations (OMG -> Oh My God) based on the dictionary in slang.txt
@@ -151,6 +145,7 @@ class Parser:
 
 		self.model = gensim.models.KeyedVectors.load_word2vec_format('corpus/GoogleNews-vectors-negative300.bin',
 																	 binary=True)
+		print('GoogleNews-vectors LOADED')
 
 	@staticmethod
 	def add_vector_to_corpus(corpus_path, new_corpus_path, write_every=1000):
@@ -163,8 +158,6 @@ class Parser:
 		"""
 		parser = Parser()
 		parser.load_w2v_model()
-
-		print('GoogleNews-vectors LOADED')
 
 		corpus = open(corpus_path, 'r', encoding='utf-8')
 		new_corpus = open(new_corpus_path, 'w', encoding='utf-8')
@@ -204,4 +197,6 @@ class Parser:
 
 if __name__ == '__main__':
 	# Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv', write_every=3)
-	Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
+	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
+	Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector-test.tsv',
+								write_every=50)
