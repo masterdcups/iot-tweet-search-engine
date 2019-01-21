@@ -1,3 +1,5 @@
+# create and save model to predict gender, sentiment and country of an user
+
 import os
 
 from joblib import dump, load
@@ -15,7 +17,6 @@ class ModelPrediction:
 	path_coun_mod = 'country_model.joblib'
 
 	def __init__(self, corpus_path, dir_path='saved_models'):
-		# truc.txt est un fichier test où il y a les 10eres lignes du corpus
 		self.dir_path = dir_path
 		self.tweets = None
 		self.corpus_path = corpus_path
@@ -127,9 +128,9 @@ if __name__ == '__main__':
 	model = ModelPrediction("corpus/fake-iot-corpus.tsv")
 	model.tweak_hyperparameters("SVM")
 	model.tweak_hyperparameters("MLP")
-	# print(model.gender_model())
-	# print(model.sentiment_model())
-	# print(model.country_model())
-	# print(model.gender_model().predict(np.zeros(300).reshape(1, -1)))
-	# print(model.sentiment_model().predict(np.zeros(300).reshape(1, -1)))
-	# print(model.country_model().predict(np.zeros(300).reshape(1, -1)))
+# print(model.gender_model())
+# print(model.sentiment_model())
+# print(model.country_model())
+# print(model.gender_model().predict(np.zeros(300).reshape(1, -1)))
+# print(model.sentiment_model().predict(np.zeros(300).reshape(1, -1)))
+# print(model.country_model().predict(np.zeros(300).reshape(1, -1)))

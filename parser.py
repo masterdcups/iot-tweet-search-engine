@@ -1,3 +1,5 @@
+# update the corpus to add the vector profile
+
 import csv
 import re
 

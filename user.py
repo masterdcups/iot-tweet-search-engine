@@ -1,3 +1,5 @@
+# udapte and predict user profile
+
 import networkx as nx
 import numpy as np
 

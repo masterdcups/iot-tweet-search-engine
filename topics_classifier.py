@@ -1,3 +1,5 @@
+# give the vector topic of a query
+
 import os
 
 import numpy as np
