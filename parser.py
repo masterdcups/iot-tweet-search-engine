@@ -1,3 +1,5 @@
+import os
+
 import gensim
 import nltk
 import numpy as np
@@ -5,6 +7,8 @@ import pandas as pd
 import preprocessor
 import scipy.sparse as sp
 from spellchecker import SpellChecker
+
+from definitions import ROOT_DIR
 
 
 class Parser:
@@ -111,17 +115,22 @@ class Parser:
 		return tweets
 
 	@staticmethod
-	def parsing_iot_corpus_pandas(corpus_path, separator='\t'):
+	def parsing_iot_corpus_pandas(corpus_path, separator='\t', categorize=False):
 		"""
 		Parse the corpus and return a Pandas DataFrame
+		:param categorize: boolean to make the tweet and user ids start to 0
+		:param separator:
 		:param corpus_path: path of the corpus
 		:return: pd.DataFrame
 		"""
 
-		df = pd.read_csv(corpus_path, sep=separator)  # , index_col="TweetID"
-		df.User_ID = df.User_ID.astype('category').cat.codes.values
-		df.TweetID = df.TweetID.astype('category').cat.codes.values
-		df = df[df.User_ID >= 0]
+		df = pd.read_csv(corpus_path, sep=separator, dtype={'User_ID': object})  # , index_col="TweetID"
+		if categorize:
+			df.User_ID = df.User_ID.astype('category').cat.codes.values
+			df.TweetID = df.TweetID.astype('category').cat.codes.values
+			df = df[df.User_ID >= 0]
+
+		df['Vector'] = df.apply(lambda row: np.asarray([float(x) for x in row['Vector'][1:-1].split(', ')]), axis=1)
 
 		return df
 
@@ -129,16 +138,17 @@ class Parser:
 	def corpus_to_sparse_matrix(corpus_path):
 		corpus = Parser.parsing_iot_corpus_pandas(corpus_path)
 
-		num_users = int(corpus.User_ID.max())
-		num_items = len(corpus)
+		num_users = corpus.User_ID.max() + 1
+		num_tweets = corpus.TweetID.max() + 1
 
 		print(num_users, 'users')
-		print(num_items, 'tweets')
+		print(num_tweets, 'tweets')
 
 		# Construct matrix
-		mat = sp.dok_matrix((num_users + 1, num_items + 1), dtype=np.float32)
+		mat = sp.dok_matrix((num_users, num_tweets), dtype=np.float32)
+
 		for index, tweet in corpus.iterrows():
-			mat[int(tweet.User_ID), index] = 1.
+			mat[int(tweet.User_ID), int(tweet.TweetID)] = 1.
 
 		return mat
 
@@ -162,12 +172,12 @@ class Parser:
 
 		return np.mean(sentence_vector, axis=0)
 
-	def load_w2v_model(self):
+	def load_w2v_model(self,
+					   path_to_pretrained_model=os.path.join(ROOT_DIR, 'corpus/GoogleNews-vectors-negative300.bin')):
 		if self.model is not None:
 			return
 
-		self.model = gensim.models.KeyedVectors.load_word2vec_format('corpus/GoogleNews-vectors-negative300.bin',
-																	 binary=True)
+		self.model = gensim.models.KeyedVectors.load_word2vec_format(path_to_pretrained_model, binary=True)
 		print('GoogleNews-vectors LOADED')
 
 	@staticmethod
