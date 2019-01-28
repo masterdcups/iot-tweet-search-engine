@@ -1,7 +1,9 @@
 import gensim
 import nltk
 import numpy as np
+import pandas as pd
 import preprocessor
+import scipy.sparse as sp
 from spellchecker import SpellChecker
 
 
@@ -78,14 +80,12 @@ class Parser:
 		return list(filter(lambda token: token not in nltk.corpus.stopwords.words('english'), tokens))
 
 	@staticmethod
-	def parsing_iot_corpus(corpus_path, clean_tweet=True):
+	def parsing_iot_corpus(corpus_path):
 		"""
 		Parse the corpus and return the list of tweets with characteristics
-		:param clean_tweet: boolean clean the text of the tweets with nltk
 		:param corpus_path: path of the corpus
 		:return: array of dict (tweets)
 		"""
-		parser = Parser()
 
 		tweets = []
 
@@ -109,6 +109,38 @@ class Parser:
 
 		file.close()
 		return tweets
+
+	@staticmethod
+	def parsing_iot_corpus_pandas(corpus_path, separator='\t'):
+		"""
+		Parse the corpus and return a Pandas DataFrame
+		:param corpus_path: path of the corpus
+		:return: pd.DataFrame
+		"""
+
+		df = pd.read_csv(corpus_path, sep=separator)  # , index_col="TweetID"
+		df.User_ID = df.User_ID.astype('category').cat.codes.values
+		df.TweetID = df.TweetID.astype('category').cat.codes.values
+		df = df[df.User_ID >= 0]
+
+		return df
+
+	@staticmethod
+	def corpus_to_sparse_matrix(corpus_path):
+		corpus = Parser.parsing_iot_corpus_pandas(corpus_path)
+
+		num_users = int(corpus.User_ID.max())
+		num_items = len(corpus)
+
+		print(num_users, 'users')
+		print(num_items, 'tweets')
+
+		# Construct matrix
+		mat = sp.dok_matrix((num_users + 1, num_items + 1), dtype=np.float32)
+		for index, tweet in corpus.iterrows():
+			mat[int(tweet.User_ID), index] = 1.
+
+		return mat
 
 	def get_composant(self, column):
 		pass
@@ -141,7 +173,8 @@ class Parser:
 	@staticmethod
 	def add_vector_to_corpus(corpus_path, new_corpus_path, write_every=1000):
 		"""
-		Create a new Vector column on the corpus
+		Create a new CleanedText and Vector column on the corpus
+		Separate the URLs by space if many
 		:param write_every: write in the final file every x lines
 		:param corpus_path:
 		:param new_corpus_path:
@@ -160,10 +193,16 @@ class Parser:
 		new_lines.append(lines[0][:-1] + '\tCleanedText\tVector\n')
 
 		for i in range(1, len(lines)):
-			cleaned_tweet = parser.clean_tweet(lines[i].split('\t')[-2])
+			parts = lines[i][:-1].split('\t')
+			cleaned_tweet = parser.clean_tweet(parts[-2])
+			urls = parts[5:-2]
 			new_lines.append(
-				lines[i][:-1] + '\t' + ' '.join(cleaned_tweet) + '\t' + str(
-					list(parser.tweet2vec(cleaned_tweet))) + '\n')
+				'\t'.join(parts[:5]) + '\t' +  # TweetID Sentiment TopicID Country Gender
+				' '.join(urls) + '\t' +  # URLs separated by space
+				'\t'.join(parts[-2:]) + '\t' +  # Text User_ID
+				' '.join(cleaned_tweet) + '\t' +  # CleanedText
+				str(list(parser.tweet2vec(cleaned_tweet)))  # Vector
+				+ '\n')
 
 			if i % write_every == 0:
 				new_corpus.write(''.join(new_lines[(last_written + 1):]))
@@ -190,5 +229,7 @@ class Parser:
 if __name__ == '__main__':
 	# Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv', write_every=3)
 	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
-	Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv',
-								write_every=5000)
+	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector-new.tsv', write_every=5)
+
+	matrix = Parser.corpus_to_sparse_matrix('corpus/iot-tweets-vector-new.tsv')
+	print(matrix)
