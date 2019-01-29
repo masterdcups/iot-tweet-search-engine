@@ -1,13 +1,18 @@
+import os
+
 import numpy as np
+
+from definitions import ROOT_DIR
 from model_prediction import ModelPrediction
+from parser import Parser
 
 
 class PredictionProfile:
     """Class to predict users' sentiment, gender and country"""
 
-    def __init__(self):
+    def __init__(self, pd_corpus=None):
         """this class needs a dictionary with TweetID, Sentiment, TopicID, Country, Gender, URLs, Text, Vector"""
-        self.model_prediction = ModelPrediction('corpus/fake-iot-corpus.tsv')
+        self.model_prediction = ModelPrediction(corpus=pd_corpus)
 
     def gender_prediction(self, vector):
         """Method to predict user's gender using a SVM classifier"""
@@ -25,7 +30,8 @@ class PredictionProfile:
 
 
 if __name__ == '__main__':
-    pred = PredictionProfile()
+    corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'))
+    pred = PredictionProfile(pd_corpus=corpus)
 
     print(pred.gender_prediction(np.zeros(300)))
     print(pred.sentiment_prediction(np.zeros(300)))

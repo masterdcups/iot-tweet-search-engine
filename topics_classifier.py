@@ -4,26 +4,32 @@ import numpy as np
 from joblib import dump, load
 from sklearn.ensemble import RandomForestClassifier
 
+from definitions import ROOT_DIR
 from parser import Parser
 
 
 class TopicsClassifier:
 	model_name = 'topic_model.joblib'
 
-	def __init__(self, dir_path='saved_models'):
+	def __init__(self, dir_path=os.path.join(ROOT_DIR, 'saved_models'), pd_corpus=None):
+		"""
+
+		:type pd_corpus: pandas.DataFrame
+		"""
 		self.model = None
+		self.corpus = pd_corpus
 
 		if not os.path.exists(dir_path):
 			os.mkdir(dir_path)
 		self.model_path = os.path.join(dir_path, TopicsClassifier.model_name)
 
 	def train(self):
-		# todo : to change with the real corpus
-		corpus = Parser.parsing_iot_corpus("corpus/fake-iot-corpus.tsv")
-		print('Corpus loaded')
+		if self.corpus is None:
+			self.corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, "corpus/iot-tweets-vector-v3.tsv"))
+			print('Corpus loaded')
 
-		X = [t['Vector'] for t in corpus]
-		y = [t['TopicID'] for t in corpus]
+		X = self.corpus.Vector.tolist()
+		y = self.corpus.TopicID.tolist()
 
 		self.model = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=0)
 		# self.model = SVC(gamma='auto')

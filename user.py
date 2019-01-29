@@ -4,6 +4,7 @@ import networkx as nx
 import numpy as np
 
 from definitions import ROOT_DIR
+from parser import Parser
 from prediction_profile import PredictionProfile
 from topics_classifier import TopicsClassifier
 
@@ -35,17 +36,37 @@ class User:
 			self.topic_vector = topic_vector
 			self.centrality = centrality
 
+		self.prediction_profile = None
+		self.topic_classifier = None
+
+	def set_prediction_profile(self, pp):
+		self.prediction_profile = pp
+
+	def set_topic_classifier(self, tpc):
+		self.topic_classifier = tpc
+
+	def get_prediction_profile(self):
+		if self.prediction_profile is None:
+			self.prediction_profile = PredictionProfile()
+
+		return self.prediction_profile
+
+	def get_topic_classifier(self):
+		if self.topic_classifier is None:
+			self.topic_classifier = TopicsClassifier()
+
+		return self.topic_classifier
+
 	def predict_profile(self):
 		"""
 		Call all the predictions models to fill the localisation, gender, etc
 		:return:
 		"""
-		pp = PredictionProfile()
-		tcf = TopicsClassifier()
-		self.localisation = pp.country_prediction(self.vec)
-		self.gender = pp.gender_prediction(self.vec)
-		self.emotion = pp.sentiment_prediction(self.vec)
-		self.topic_vector = tcf.predict(self.vec.reshape(1, -1))[0]
+
+		self.localisation = self.get_prediction_profile().country_prediction(self.vec)
+		self.gender = self.get_prediction_profile().gender_prediction(self.vec)
+		self.emotion = self.get_prediction_profile().sentiment_prediction(self.vec)
+		self.topic_vector = self.get_topic_classifier().predict(self.vec.reshape(1, -1))[0]
 
 	def update_profile(self, vec, predict=True):
 		"""
@@ -71,12 +92,11 @@ class User:
 		self.create_files()
 		f = open(User.user_fname if type(self.id) is int else User.author_fname, "r")
 		contents = f.readlines()
-		i = 0
-		for j in range(len(contents)):
+
+		for j in range(1, len(contents)):
 			items = contents[j].split('\t')
 			id = int(items[0]) if type(self.id) is int else items[0]
-			users_data[id] = i
-			i += 1
+			users_data[id] = j
 		f.close()
 
 		to_insert = str(self.id) + '\t' + str(self.nb_click) + '\t' + str(
@@ -95,12 +115,14 @@ class User:
 		f.close()
 
 	def load(self):
-		"""Load the user from the coresponding file of do nothing"""
+		"""Load the user from the corresponding file of do nothing"""
 		assert self.id is not None
 
 		self.create_files()
 		f = open(User.user_fname if type(self.id) is int else User.author_fname, "r")
-		for l in f:
+		lines = f.readlines()
+		for i in range(1, len(lines)):
+			l = lines[i]
 			items = l.split('\t')
 			if items[0] == str(self.id):
 				self.nb_click = int(items[1])
@@ -132,7 +154,9 @@ class User:
 		"""
 		users = []
 		file = open(User.author_fname, "r")
-		for line in file:
+		lines = file.readlines()
+		for i in range(1, len(lines)):
+			line = lines[i]
 			items = line.split('\t')
 			u = User(
 				id=items[0],
@@ -158,25 +182,34 @@ class User:
 			open(User.user_fname, 'w+')
 
 		if type(self.id) is str and not os.path.exists(User.author_fname):
-			open(User.author_fname, 'w+')
+			f = open(User.author_fname, 'w+')
+			f.write('User_Name\tNbClick\tVector\tLocalisation\tGender\tEmotion\tTopicVector\tCentrality\n')
+			f.close()
 
 	@staticmethod
 	def create_authors(corpus):
 		"""
 		Generate the authors_profile.tsv file
 		To perform just ONE time
+		:type corpus: pandas.DataFrame
 		:return:
 		"""
-		for tweet in corpus:
-			u = User(tweet['Author'])
+
+		tpc = TopicsClassifier(pd_corpus=corpus)
+		pp = PredictionProfile(pd_corpus=corpus)
+
+		for index, tweet in corpus.iterrows():
+			u = User(tweet.User_Name)
 			u.load()
-			u.update_profile(tweet['Vector'], predict=False)
+			u.update_profile(tweet.Vector, predict=False)
 			u.save()
 
 		graph = User.load_graph()
 		centralities = nx.eigenvector_centrality(graph)
 		for author in User.get_all_authors():
 			author.centrality = centralities[author.id] if author.id in centralities else 0.
+			author.set_prediction_profile(pp)
+			author.set_topic_classifier(tpc)
 			author.predict_profile()
 			author.save()
 		return
@@ -187,4 +220,6 @@ class User:
 
 
 if __name__ == '__main__':
-	User.create_authors()
+	corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v31.tsv'))
+	print('Corpus Loaded')
+	User.create_authors(corpus)
