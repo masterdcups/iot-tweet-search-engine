@@ -3,14 +3,15 @@ import os
 import networkx as nx
 import numpy as np
 
+from definitions import ROOT_DIR
 from prediction_profile import PredictionProfile
 from topics_classifier import TopicsClassifier
 
 
 class User:
-	user_fname = 'saved_models/users_profile.tsv'
-	author_fname = 'saved_models/authors_profile.tsv'
-	user_graph_path = 'corpus/author_graph.net'
+	user_fname = os.path.join(ROOT_DIR, 'saved_models/users_profile.tsv')
+	author_fname = os.path.join(ROOT_DIR, 'saved_models/authors_profile.tsv')
+	user_graph_path = os.path.join(ROOT_DIR, 'corpus/author_graph.net')
 
 	def __init__(self, id=None, nb_click=0, vector=np.zeros(300), localisation='', gender='', emotion='',
 				 topic_vector=np.asarray([]), centrality=0., vec_size=300):
