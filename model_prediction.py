@@ -6,6 +6,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 
+from definitions import ROOT_DIR
 from parser import Parser
 
 
@@ -14,18 +15,24 @@ class ModelPrediction:
 	path_sent_mod = 'sentiment_model.joblib'
 	path_coun_mod = 'country_model.joblib'
 
-	def __init__(self, corpus_path, dir_path='saved_models'):
-		# truc.txt est un fichier test où il y a les 10eres lignes du corpus
+	def __init__(self, corpus=None, dir_path=os.path.join(ROOT_DIR, 'saved_models')):
+		"""
+
+		:type corpus: pandas.DataFrame
+		"""
 		self.dir_path = dir_path
-		self.tweets = None
-		self.corpus_path = corpus_path
+		self.tweets = corpus
+
+		self.gender_mod = None
+		self.sentiment_mod = None
+		self.country_mod = None
 
 		if not os.path.exists(dir_path):
 			os.mkdir(dir_path)
 
 	def load_corpus(self):
 		if self.tweets is None:
-			self.tweets = Parser.parsing_iot_corpus(self.corpus_path)
+			self.tweets = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, "corpus/iot-tweets-vector-v3.tsv"))
 
 	def gender_model(self, file_path=path_gend_mod):
 		"""Method to create model prediction user's gender using a SVM classifier"""
@@ -35,17 +42,18 @@ class ModelPrediction:
 
 			self.load_corpus()
 
-			X = [t['Vector'] for t in self.tweets]
-			y = [t['Gender'] for t in self.tweets]
+			X = self.tweets.Vector.tolist()
+			y = self.tweets.Gender.tolist()
 
-			model = svm.SVC(kernel='linear')
-			model.fit(X, y)
+			self.gender_mod = svm.SVC(kernel='linear')
+			self.gender_mod.fit(X, y)
 
-			dump(model, full_path)
+			dump(self.gender_mod, full_path)
 		else:
-			model = load(full_path)
+			if self.gender_mod is None:
+				self.gender_mod = load(full_path)
 
-		return model
+		return self.gender_mod
 
 	def sentiment_model(self, file_path=path_sent_mod):
 		"""Method to create model prediction user's sentiment using a CNN"""
@@ -55,17 +63,18 @@ class ModelPrediction:
 
 			self.load_corpus()
 
-			X = [t['Vector'] for t in self.tweets]
-			y = [t['Sentiment'] for t in self.tweets]
+			X = self.tweets.Vector.tolist()
+			y = self.tweets.Sentiment.tolist()
 
-			clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
-			clf.fit(X, y)
+			self.sentiment_mod = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
+			self.sentiment_mod.fit(X, y)
 
-			dump(clf, full_path)
+			dump(self.sentiment_mod, full_path)
 		else:
-			clf = load(full_path)
+			if self.sentiment_mod is None:
+				self.sentiment_mod = load(full_path)
 
-		return clf
+		return self.sentiment_mod
 
 	def country_model(self, file_path=path_coun_mod):
 		"""Method to create model prediction user's country using a Naive Bayes network"""
@@ -75,24 +84,25 @@ class ModelPrediction:
 
 			self.load_corpus()
 
-			X = [t['Vector'] for t in self.tweets]
-			y = [t['Country'] for t in self.tweets]
+			X = self.tweets.Vector.tolist()
+			y = self.tweets.Country.tolist()
 
-			gnb = GaussianNB()
-			gnb.fit(X, y)
+			self.country_mod = GaussianNB()
+			self.country_mod.fit(X, y)
 
-			dump(gnb, full_path)
+			dump(self.country_mod, full_path)
 		else:
-			gnb = load(full_path)
+			if self.country_mod is None:
+				self.country_mod = load(full_path)
 
-		return gnb
+		return self.country_mod
 
 	def tweak_hyperparameters(self, type_model):
 		self.load_corpus()
 
 		if type_model == "SVM":
-			X = [t['Vector'] for t in self.tweets]
-			y = [t['Gender'] for t in self.tweets]
+			X = self.tweets.Vector.tolist()
+			y = self.tweets.Gender.tolist()
 
 			model = svm.SVC()
 			param_grid = [
@@ -105,8 +115,8 @@ class ModelPrediction:
 			# Best parameter set
 			print('Best parameters found:\n', clf.best_params_)
 		else:
-			X = [t['Vector'] for t in self.tweets]
-			y = [t['Sentiment'] for t in self.tweets]
+			X = self.tweets.Vector.tolist()
+			y = self.tweets.Sentiment.tolist()
 
 			model = MLPClassifier(max_iter=100)
 			param_grid = {
@@ -124,7 +134,8 @@ class ModelPrediction:
 
 
 if __name__ == '__main__':
-	model = ModelPrediction("corpus/fake-iot-corpus.tsv")
+	corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'))
+	model = ModelPrediction(corpus=corpus)
 	model.tweak_hyperparameters("SVM")
 	model.tweak_hyperparameters("MLP")
 	# print(model.gender_model())

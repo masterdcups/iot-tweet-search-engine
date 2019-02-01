@@ -48,7 +48,7 @@ class Parser:
 		if self.abbreviations is not None:
 			return
 
-		file_name = "corpus/slang.txt"
+		file_name = os.path.join(ROOT_DIR, "corpus/slang.txt")
 		file = open(file_name, 'r')
 		self.abbreviations = {}
 		for line in file.readlines():
@@ -84,47 +84,17 @@ class Parser:
 		return list(filter(lambda token: token not in nltk.corpus.stopwords.words('english'), tokens))
 
 	@staticmethod
-	def parsing_iot_corpus(corpus_path):
-		"""
-		Parse the corpus and return the list of tweets with characteristics
-		:param corpus_path: path of the corpus
-		:return: array of dict (tweets)
-		"""
-
-		tweets = []
-
-		with open(corpus_path, "r") as file:
-			file.readline()
-
-			for line in file:
-				tweet = line.replace('\n', '').split("\t")
-				tweet_infos = {}
-				tweet_infos['TweetID'] = tweet[0]
-				tweet_infos['Sentiment'] = tweet[1]
-				tweet_infos['TopicID'] = tweet[2]
-				tweet_infos['Country'] = tweet[3]
-				tweet_infos['Gender'] = tweet[4]
-				tweet_infos['URLs'] = tweet[5:-4]
-				tweet_infos['Text'] = tweet[-4]
-				tweet_infos['Author'] = tweet[-3]
-				tweet_infos['CleanedText'] = tweet[-2]
-				tweet_infos['Vector'] = np.asarray([float(x) for x in tweet[-1][1:-1].split(', ')])
-				tweets.append(tweet_infos)
-
-		file.close()
-		return tweets
-
-	@staticmethod
 	def parsing_iot_corpus_pandas(corpus_path, separator='\t', categorize=False):
 		"""
 		Parse the corpus and return a Pandas DataFrame
 		:param categorize: boolean to make the tweet and user ids start to 0
 		:param separator:
 		:param corpus_path: path of the corpus
-		:return: pd.DataFrame
+		:return: pandas.DataFrame
 		"""
 
 		df = pd.read_csv(corpus_path, sep=separator, dtype={'User_ID': object})  # , index_col="TweetID"
+		df = df.dropna(subset=['User_ID'])  # remove tweets without users
 		if categorize:
 			df.User_ID = df.User_ID.astype('category').cat.codes.values
 			df.TweetID = df.TweetID.astype('category').cat.codes.values
@@ -151,9 +121,6 @@ class Parser:
 			mat[int(tweet.User_ID), int(tweet.TweetID)] = 1.
 
 		return mat
-
-	def get_composant(self, column):
-		pass
 
 	def tweet2vec(self, tweet_text):
 		sentence_vector = []
@@ -204,12 +171,16 @@ class Parser:
 
 		for i in range(1, len(lines)):
 			parts = lines[i][:-1].split('\t')
-			cleaned_tweet = parser.clean_tweet(parts[-2])
-			urls = parts[5:-2]
+			cleaned_tweet = parser.clean_tweet(parts[-6])
+			urls = parts[5:-6]
 			new_lines.append(
 				'\t'.join(parts[:5]) + '\t' +  # TweetID Sentiment TopicID Country Gender
 				' '.join(urls) + '\t' +  # URLs separated by space
-				'\t'.join(parts[-2:]) + '\t' +  # Text User_ID
+				parts[-6] + '\t' +  # Text
+				parts[-5] + '\t' +  # User_ID
+				parts[-4][1:-1] + '\t' +  # User_Name without quotes
+				parts[-3][1:-1] + '\t' +  # Date without quotes
+				'\t'.join(parts[-2:]) + '\t' +  # Hashtags Indication
 				' '.join(cleaned_tweet) + '\t' +  # CleanedText
 				str(list(parser.tweet2vec(cleaned_tweet)))  # Vector
 				+ '\n')
@@ -239,7 +210,8 @@ class Parser:
 if __name__ == '__main__':
 	# Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv', write_every=3)
 	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
-	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector-new.tsv', write_every=5)
+	Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-completv3.tsv', 'corpus/iot-tweets-vector-v3.tsv',
+								write_every=100)
 
-	matrix = Parser.corpus_to_sparse_matrix('corpus/iot-tweets-vector-new.tsv')
-	print(matrix)
+# matrix = Parser.corpus_to_sparse_matrix('corpus/iot-tweets-vector-new.tsv')
+# print(matrix)
