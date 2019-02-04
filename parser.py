@@ -20,7 +20,7 @@ class Parser:
 		self.spell_check = None
 
 		preprocessor.set_options(preprocessor.OPT.URL, preprocessor.OPT.MENTION, preprocessor.OPT.RESERVED,
-								 preprocessor.OPT.EMOJI, preprocessor.OPT.SMILEY)
+		                         preprocessor.OPT.EMOJI, preprocessor.OPT.SMILEY)
 
 	def clean_tweet(self, tweet_text):
 		"""
@@ -173,7 +173,7 @@ class Parser:
 		return np.mean(sentence_vector, axis=0)
 
 	def load_w2v_model(self,
-					   path_to_pretrained_model=os.path.join(ROOT_DIR, 'corpus/GoogleNews-vectors-negative300.bin')):
+	                   path_to_pretrained_model=os.path.join(ROOT_DIR, 'corpus/GoogleNews-vectors-negative300.bin')):
 		if self.model is not None:
 			return
 
