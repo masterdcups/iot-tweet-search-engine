@@ -1,10 +1,14 @@
+import os
+
 import numpy as np
+from keras.engine.saving import model_from_yaml
 from keras.layers import Embedding, Input, Dense, Flatten, concatenate
 from keras.models import Model
 from keras.optimizers import SGD
 from keras.regularizers import l2
 from sklearn.model_selection import train_test_split
 
+from definitions import ROOT_DIR
 from parser import Parser
 
 
@@ -36,8 +40,8 @@ def get_train_instances(train, num_negatives, num_tweets):
 	user_input, item_input, labels = [], [], []
 
 	for index, tweet in train.iterrows():
-		u = tweet.User_ID
-		i = tweet.TweetID
+		u = tweet.User_ID_u
+		i = tweet.TweetID_u
 		# positive instance
 		user_input.append(u)
 		item_input.append(i)
@@ -45,7 +49,7 @@ def get_train_instances(train, num_negatives, num_tweets):
 		# negative instances
 		for t in range(num_negatives):
 			j = np.random.randint(num_tweets)
-			while (u, j) in train[['User_ID', 'TweetID']]:
+			while (u, j) in train[['User_ID_u', 'TweetID_u']]:
 				j = np.random.randint(num_tweets)
 			user_input.append(u)
 			item_input.append(j)
@@ -60,7 +64,46 @@ class GMFModel:
 
 
 if __name__ == '__main__':
-	corpus = Parser.parsing_iot_corpus_pandas('../corpus/iot-tweets-vector-new.tsv')
+
+	# model = model.load_weights(filepath
+
+	f = open('train_0.yaml', 'r')
+	model = model_from_yaml(f.read())
+	f.close()
+	model.load_weights('train_0.model')
+
+	corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'),
+											  categorize=True)
+
+	train, test = train_test_split(corpus, test_size=0.2)
+
+	num_tweets = corpus.TweetID_u.max() + 1
+	num_negatives = 20
+
+	for index, tweet in test.iterrows():
+		u = tweet.User_ID_u
+		items = []
+
+		print('utilisateur: ', u)
+
+		# negative instances
+		for t in range(num_negatives):
+			j = np.random.randint(num_tweets)
+			while (u, j) in train[['User_ID_u', 'TweetID_u']]:
+				j = np.random.randint(num_tweets)
+			# user_input.append(u)
+			items.append(j)
+
+		print('nagatives tweets de ', u, ': ', items)
+
+		users = np.full(len(items), u, dtype='int32')
+		predictions = model.predict([users, np.array(items)], batch_size=100, verbose=0)
+		print('predictions: ', predictions)
+
+	exit()
+
+	corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'),
+											  categorize=True)
 
 	num_negatives = 4  # Number of negative instances to pair with a positive instance.
 	regs = [0, 0]  # Regularization for user and item embeddings.
@@ -70,8 +113,8 @@ if __name__ == '__main__':
 	learning_rate = 0.001
 	model_out_file = 'train_'
 
-	num_users = corpus.User_ID.max() + 1
-	num_tweets = corpus.TweetID.max() + 1
+	num_users = corpus.User_ID_u.max() + 1
+	num_tweets = corpus.TweetID_u.max() + 1
 
 	print(num_users, 'users')
 	print(num_tweets, 'tweets')
@@ -98,3 +141,8 @@ if __name__ == '__main__':
 						 batch_size=batch_size, epochs=1, verbose=0, shuffle=True)
 
 		model.save_weights(model_out_file + str(epoch) + '.model', overwrite=True)
+
+		f = open(model_out_file + str(epoch) + '.yaml', 'w')
+		yaml_string = model.to_yaml()
+		f.write(yaml_string)
+		f.close()
