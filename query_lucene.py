@@ -18,7 +18,7 @@ class QueryLucene:
 	"""Match documents from the corpus with queries using lucene"""
 
 	def __init__(self, index_path=os.path.join(ROOT_DIR, 'corpus/indexRI'),
-	             corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv')):
+				 corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv')):
 		"""
 		Lucene components initialization
 		:param index_path: path of the index
@@ -106,7 +106,7 @@ class QueryLucene:
 		reranked = []
 		tweet_ids = self.get_docs_field(results, "TweetID")
 		for i in range(len(results)):
-			doc_vector = self.corpus[self.corpus.TweetID == tweet_ids[i]].Vector
+			doc_vector = self.corpus[self.corpus.TweetID == int(tweet_ids[i])].Vector
 			doc_vector = doc_vector.values[0] if len(doc_vector.values) > 0 else np.zeros(300)
 			sim = cosine_similarity(userVector.reshape(1, -1), doc_vector.reshape(1, -1))
 			reranked.append({'doc': results[i], 'sim': sim[0][0]})
