@@ -17,7 +17,8 @@ from parser import Parser
 class QueryLucene:
 	"""Match documents from the corpus with queries using lucene"""
 
-	def __init__(self, index_path='corpus/indexRI'):
+	def __init__(self, index_path=os.path.join(ROOT_DIR, 'corpus/indexRI'),
+	             corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv')):
 		"""
 		Lucene components initialization
 		:param index_path: path of the index
@@ -28,7 +29,7 @@ class QueryLucene:
 		self.reader = DirectoryReader.open(self.index)
 		self.searcher = IndexSearcher(self.reader)
 		self.constrained_query = BooleanQuery.Builder()
-		self.corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, "corpus/iot-tweets-vector-v3.tsv"))
+		self.corpus = Parser.parsing_iot_corpus_pandas(corpus_path)
 
 	def query_parser_filter(self, field_values, field_filter=['Vector']):
 		"""
@@ -54,6 +55,36 @@ class QueryLucene:
 			query = query_parser.parse(field_values[i])
 			self.constrained_query.add(query, BooleanClause.Occur.MUST)
 
+	def get_docs_field(self, hits, field='Text'):
+		"""
+		Get a field from a query's results
+		:param hits: the documents resulting from a query
+		:param field: the field to get
+		:return: the string value of a field from a query's results
+		"""
+		field_values = []
+		for hit in hits:
+			doc = self.searcher.doc(hit.doc)
+			field_values.append(doc.getField(field).stringValue())
+		return field_values
+
+	def remove_duplicates(self, hits):
+		"""
+		remove duplicates (regarding the text field) from a scoreDocs object
+		:param hits: the scoreDocs object resulting from a query
+		:return: the scoreDocs object without duplicates
+		"""
+		seen = set()
+		keep = []
+		texts = self.get_docs_field(hits)
+
+		for i in range(len(texts)):
+			if texts[i] not in seen:
+				seen.add(texts[i])
+				keep.append(hits[i])
+
+		return keep
+
 	def get_results(self, nb_results=1000):
 		"""
 		Get results that match with the query
@@ -62,18 +93,8 @@ class QueryLucene:
 		"""
 		hits = self.searcher.search(self.constrained_query.build(), nb_results).scoreDocs
 		self.constrained_query = BooleanQuery.Builder()
+		hits = self.remove_duplicates(hits)
 		return hits
-
-	def get_docs_field(self, hits, field='Text'):
-		"""
-		Get a field from a query's results
-		:param hits: the documents resulting from a query
-		:param field: the field to get
-		:return: the string value of a field from a query's results
-		"""
-		for i, hit in enumerate(hits):
-			doc = self.searcher.doc(hit.doc)
-			yield doc.getField(field).stringValue()
 
 	def rerank_results(self, results, userVector):
 		"""
@@ -83,13 +104,12 @@ class QueryLucene:
 		:return: the reranked list of documents
 		"""
 		reranked = []
-		for doc in results:
-			doc_id = int(next(self.get_docs_field([doc], "TweetID")))
-			doc_vector = self.corpus[self.corpus.TweetID == doc_id].Vector
+		tweet_ids = self.get_docs_field(results, "TweetID")
+		for i in range(len(results)):
+			doc_vector = self.corpus[self.corpus.TweetID == tweet_ids[i]].Vector
 			doc_vector = doc_vector.values[0] if len(doc_vector.values) > 0 else np.zeros(300)
 			sim = cosine_similarity(userVector.reshape(1, -1), doc_vector.reshape(1, -1))
-			reranked.append({'doc': doc, 'sim': sim[0][0]})
-
+			reranked.append({'doc': results[i], 'sim': sim[0][0]})
 		reranked = sorted(reranked, key=lambda k: k['sim'], reverse=True)
 		return [x['doc'] for x in reranked]
 
