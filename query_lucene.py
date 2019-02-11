@@ -18,7 +18,7 @@ class QueryLucene:
 	"""Match documents from the corpus with queries using lucene"""
 
 	def __init__(self, index_path=os.path.join(ROOT_DIR, 'corpus/indexRI'),
-				 corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv')):
+	             corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv')):
 		"""
 		Lucene components initialization
 		:param index_path: path of the index
@@ -55,19 +55,6 @@ class QueryLucene:
 			query = query_parser.parse(field_values[i])
 			self.constrained_query.add(query, BooleanClause.Occur.MUST)
 
-	def get_docs_field(self, hits, field='Text'):
-		"""
-		Get a field from a query's results
-		:param hits: the documents resulting from a query
-		:param field: the field to get
-		:return: the string value of a field from a query's results
-		"""
-		field_values = []
-		for hit in hits:
-			doc = self.searcher.doc(hit.doc)
-			field_values.append(doc.getField(field).stringValue())
-		return field_values
-
 	def remove_duplicates(self, hits):
 		"""
 		remove duplicates (regarding the text field) from a scoreDocs object
@@ -76,11 +63,10 @@ class QueryLucene:
 		"""
 		seen = set()
 		keep = []
-		texts = self.get_docs_field(hits)
 
-		for i in range(len(texts)):
-			if texts[i] not in seen:
-				seen.add(texts[i])
+		for i in range(len(hits)):
+			if hits[i]["Text"] not in seen:
+				seen.add(hits[i]["Text"])
 				keep.append(hits[i])
 
 		return keep
@@ -91,8 +77,15 @@ class QueryLucene:
 		:param nb_results:
 		:return:
 		"""
-		hits = self.searcher.search(self.constrained_query.build(), nb_results).scoreDocs
+		docs = self.searcher.search(self.constrained_query.build(), nb_results).scoreDocs
 		self.constrained_query = BooleanQuery.Builder()
+
+		hits = []
+		for i in range(len(docs)):
+			hits.append({})
+			for field in self.reader.document(docs[i].doc).getFields():
+				hits[i][field.name()] = field.stringValue()
+
 		hits = self.remove_duplicates(hits)
 		return hits
 
@@ -104,9 +97,8 @@ class QueryLucene:
 		:return: the reranked list of documents
 		"""
 		reranked = []
-		tweet_ids = self.get_docs_field(results, "TweetID")
 		for i in range(len(results)):
-			doc_vector = self.corpus[self.corpus.TweetID == int(tweet_ids[i])].Vector
+			doc_vector = self.corpus[self.corpus.TweetID == results[i]["TweetID"]].Vector
 			doc_vector = doc_vector.values[0] if len(doc_vector.values) > 0 else np.zeros(300)
 			sim = cosine_similarity(userVector.reshape(1, -1), doc_vector.reshape(1, -1))
 			reranked.append({'doc': results[i], 'sim': sim[0][0]})
@@ -120,8 +112,7 @@ class QueryLucene:
 if __name__ == '__main__':
 	ql = QueryLucene()
 	ql.query_parser_must(["First sign of twitter as transport for"])
-	results = ql.get_results(10)
+	results = ql.get_results()[:10]
 	docs = ql.rerank_results(results, np.zeros(300))
-	texts = ql.get_docs_field(docs)
-	for text in texts:
-		print(text)
+	for doc in docs:
+		print(doc["Text"])
