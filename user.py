@@ -17,15 +17,17 @@ class User:
 	def __init__(self, id=None, nb_click=0, vector=np.zeros(300), localisation='', gender='', emotion='',
 				 topic_vector=np.asarray([]), centrality=0., vec_size=300):
 
+		self.id = None
+
 		if id is None:
-			self.id = User.next_id()
+			self.id = self.next_id()
 			self.vec = np.zeros(vec_size)
 			self.nb_click = 0
-			self.localisation = None
-			self.gender = None
-			self.emotion = None
-			self.topic_vector = None
-			self.centrality = None
+			self.localisation = ''
+			self.gender = ''
+			self.emotion = ''
+			self.topic_vector = np.asarray([])
+			self.centrality = 0.
 		else:
 			self.id = id
 			self.vec = vector
@@ -122,7 +124,7 @@ class User:
 		f = open(User.user_fname if type(self.id) is int else User.author_fname, "r")
 		lines = f.readlines()
 		for i in range(1, len(lines)):
-			l = lines[i]
+			l = lines[i][:-1]
 			items = l.split('\t')
 			if items[0] == str(self.id):
 				self.nb_click = int(items[1])
@@ -137,12 +139,12 @@ class User:
 				f.close()
 				return
 
-	@staticmethod
-	def next_id():
+	def next_id(self):
 		"""Get the max +1 id in the file"""
+		self.create_files()
 		f = open(User.user_fname, "r")
 		contents = f.readlines()
-		if len(contents) == 0:
+		if len(contents) == 1:
 			return 1
 		return int(contents[-1].split('\t')[0]) + 1
 
@@ -178,8 +180,10 @@ class User:
 		Create the users and authors files if they don't exists
 		:return:
 		"""
-		if type(self.id) is int and not os.path.exists(User.user_fname):
-			open(User.user_fname, 'w+')
+		if (type(self.id) is int or self.id is None) and not os.path.exists(User.user_fname):
+			f = open(User.user_fname, 'w+')
+			f.write('User_Name\tNbClick\tVector\tLocalisation\tGender\tEmotion\tTopicVector\tCentrality\n')
+			f.close()
 
 		if type(self.id) is str and not os.path.exists(User.author_fname):
 			f = open(User.author_fname, 'w+')

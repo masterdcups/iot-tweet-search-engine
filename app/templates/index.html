@@ -2,8 +2,29 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Hi, {{ user.username }}!</h1>
-    {% for post in posts %}
-    <div><p>{{ post.author.username }} says: <b>{{ post.body }}</b></p></div>
-    {% endfor %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <form action="/" method="get" class="mt-5">
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-lg" name="query" value="{{ query }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary">Sumbit</button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <table class="table">
+                {% for tweet in results %}
+                    <tr>
+                        <td>{{ tweet.Text }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
 {% endblock %}
