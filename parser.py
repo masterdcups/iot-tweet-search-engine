@@ -84,7 +84,7 @@ class Parser:
 		return list(filter(lambda token: token not in nltk.corpus.stopwords.words('english'), tokens))
 
 	@staticmethod
-	def parsing_iot_corpus_pandas(corpus_path, separator='\t', categorize=False):
+	def parsing_iot_corpus_pandas(corpus_path, separator='\t', categorize=False, vector_asarray=True):
 		"""
 		Parse the corpus and return a Pandas DataFrame
 		:param categorize: boolean to make the tweet and user ids start to 0
@@ -100,7 +100,9 @@ class Parser:
 			df.TweetID = df.TweetID.astype('category').cat.codes.values
 			df = df[df.User_ID >= 0]
 
-		df['Vector'] = df.apply(lambda row: np.asarray([float(x) for x in row['Vector'][1:-1].split(', ')]), axis=1)
+		# This takes 20 seconds
+		if vector_asarray:
+			df['Vector'] = df.apply(lambda row: np.asarray([float(x) for x in row['Vector'][1:-1].split(', ')]), axis=1)
 
 		return df
 
@@ -121,6 +123,10 @@ class Parser:
 			mat[int(tweet.User_ID), int(tweet.TweetID)] = 1.
 
 		return mat
+
+	@staticmethod
+	def vector_string_to_array(vector):
+		return np.asarray([float(x) for x in vector[1:-1].split(', ')])
 
 	def tweet2vec(self, tweet_text):
 		sentence_vector = []
@@ -210,8 +216,13 @@ class Parser:
 if __name__ == '__main__':
 	# Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv', write_every=3)
 	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
-	Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-completv3.tsv', 'corpus/iot-tweets-vector-v3.tsv',
-								write_every=100)
+	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-completv3.tsv', 'corpus/iot-tweets-vector-v3.tsv',
+	# 							write_every=100)
+	import time
+
+	start_time = time.time()
+	Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'))
+	print("--- %s seconds ---" % (time.time() - start_time))
 
 # matrix = Parser.corpus_to_sparse_matrix('corpus/iot-tweets-vector-new.tsv')
 # print(matrix)

@@ -29,7 +29,7 @@ class QueryLucene:
 		self.reader = DirectoryReader.open(self.index)
 		self.searcher = IndexSearcher(self.reader)
 		self.constrained_query = BooleanQuery.Builder()
-		self.corpus = Parser.parsing_iot_corpus_pandas(corpus_path)
+		self.corpus = Parser.parsing_iot_corpus_pandas(corpus_path, vector_asarray=False)
 
 	def query_parser_filter(self, field_values, field_filter=['Vector']):
 		"""
@@ -89,7 +89,7 @@ class QueryLucene:
 		hits = self.remove_duplicates(hits)
 		return hits
 
-	def rerank_results(self, results, userVector):
+	def rerank_results(self, results, user_vector):
 		"""
 		reranks the results of a query by using the similarity between the user thematic vector and the vector from the tweets
 		:param results: the documents resulting from a query
@@ -99,10 +99,13 @@ class QueryLucene:
 		reranked = []
 		for i in range(len(results)):
 			doc_vector = self.corpus[self.corpus.TweetID == int(results[i]["TweetID"])].Vector
-			doc_vector = doc_vector.values[0] if len(doc_vector.values) > 0 else np.zeros(300)
-			sim = cosine_similarity(userVector.reshape(1, -1), doc_vector.reshape(1, -1))
+			if len(doc_vector.values) > 0:
+				doc_vector = Parser.vector_string_to_array(doc_vector.values[0])
+			else:
+				doc_vector = np.zeros(300)
+			sim = cosine_similarity(user_vector.reshape(1, -1), doc_vector.reshape(1, -1))
 			reranked.append({'doc': results[i], 'sim': sim[0][0]})
-		reranked = sorted(reranked, key=lambda k: k['sim'], reverse=True)
+			reranked = sorted(reranked, key=lambda k: k['sim'], reverse=True)
 		return [x['doc'] for x in reranked]
 
 	def close_reader(self):
@@ -110,9 +113,9 @@ class QueryLucene:
 
 
 if __name__ == '__main__':
-	ql = QueryLucene(corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v31.tsv'))
+	ql = QueryLucene()
 	ql.query_parser_must(["First sign of twitter as transport for"])
-	results = ql.get_results()[:10]
-	docs = ql.rerank_results(results, np.zeros(300))
+	results = ql.get_results()
+	docs = ql.rerank_results(results, np.zeros(300))[:10]
 	for doc in docs:
 		print(doc["Text"])
