@@ -15,7 +15,7 @@ class User:
 	user_graph_path = os.path.join(ROOT_DIR, 'corpus/author_graph.net')
 
 	def __init__(self, id=None, nb_click=0, vector=np.zeros(300), localisation='', gender='', emotion='',
-				 topic_vector=np.asarray([]), centrality=0., vec_size=300):
+	             topic_vector=np.asarray([]), centrality=0., vec_size=300):
 
 		self.id = None
 
@@ -205,7 +205,7 @@ class User:
 		for index, tweet in corpus.iterrows():
 			u = User(tweet.User_Name)
 			u.load()
-			u.update_profile(tweet.Vector, predict=False)
+			u.update_profile(Parser.vector_string_to_array(tweet.Vector), predict=False)
 			u.save()
 
 		graph = User.load_graph()
@@ -224,6 +224,7 @@ class User:
 
 
 if __name__ == '__main__':
-	corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v31.tsv'))
+	corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'),
+	                                          vector_asarray=False)
 	print('Corpus Loaded')
 	User.create_authors(corpus)
