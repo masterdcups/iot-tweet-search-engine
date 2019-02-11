@@ -98,7 +98,7 @@ class QueryLucene:
 		"""
 		reranked = []
 		for i in range(len(results)):
-			doc_vector = self.corpus[self.corpus.TweetID == results[i]["TweetID"]].Vector
+			doc_vector = self.corpus[self.corpus.TweetID == int(results[i]["TweetID"])].Vector
 			doc_vector = doc_vector.values[0] if len(doc_vector.values) > 0 else np.zeros(300)
 			sim = cosine_similarity(userVector.reshape(1, -1), doc_vector.reshape(1, -1))
 			reranked.append({'doc': results[i], 'sim': sim[0][0]})
@@ -110,7 +110,7 @@ class QueryLucene:
 
 
 if __name__ == '__main__':
-	ql = QueryLucene()
+	ql = QueryLucene(corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v31.tsv'))
 	ql.query_parser_must(["First sign of twitter as transport for"])
 	results = ql.get_results()[:10]
 	docs = ql.rerank_results(results, np.zeros(300))
