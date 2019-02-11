@@ -211,7 +211,7 @@ if __name__ == '__main__':
 	# Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv', write_every=3)
 	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
 	Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-completv3.tsv', 'corpus/iot-tweets-vector-v3.tsv',
-								write_every=100)
+								write_every=1000)
 
 # matrix = Parser.corpus_to_sparse_matrix('corpus/iot-tweets-vector-new.tsv')
 # print(matrix)
