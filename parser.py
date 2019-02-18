@@ -143,7 +143,7 @@ class Parser:
 		if len(sentence_vector) == 0:
 			sentence_vector.append(np.zeros_like(self.model.wv["tax"]))
 
-		return np.mean(sentence_vector, axis=0)
+		return np.mean(sentence_vector, axis=0, dtype=float)
 
 	def load_w2v_model(self,
 	                   path_to_pretrained_model=os.path.join(ROOT_DIR, 'corpus/GoogleNews-vectors-negative300.bin')):
@@ -212,6 +212,9 @@ class Parser:
 
 		nltk.download('stopwords')
 
+	@staticmethod
+	def build_database(corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-2009-2016-completv3.tsv')):
+		pass
 
 if __name__ == '__main__':
 	# Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv', write_every=3)
