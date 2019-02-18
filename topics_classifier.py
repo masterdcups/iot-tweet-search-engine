@@ -5,7 +5,7 @@ from joblib import dump, load
 from sklearn.ensemble import RandomForestClassifier
 
 from definitions import ROOT_DIR
-from parser import Parser
+from parser2 import *
 
 
 class TopicsClassifier:
@@ -25,7 +25,7 @@ class TopicsClassifier:
 
 	def train(self):
 		if self.corpus is None:
-			self.corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, "corpus/iot-tweets-vector-v3.tsv"))
+			self.corpus = Parser2.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, "corpus/iot-tweets-vector-v3.tsv"))
 			print('Corpus loaded')
 
 		X = self.corpus.Vector.tolist()

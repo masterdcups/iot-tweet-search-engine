@@ -8,10 +8,10 @@ import preprocessor
 import scipy.sparse as sp
 from spellchecker import SpellChecker
 
-from definitions import ROOT_DIR
+from .definitions import ROOT_DIR
 
 
-class Parser:
+class Parser2:
 
 	def __init__(self):
 		self.load_nltk()
@@ -106,7 +106,7 @@ class Parser:
 
 	@staticmethod
 	def corpus_to_sparse_matrix(corpus_path):
-		corpus = Parser.parsing_iot_corpus_pandas(corpus_path)
+		corpus = Parser2.parsing_iot_corpus_pandas(corpus_path)
 
 		num_users = corpus.User_ID.max() + 1
 		num_tweets = corpus.TweetID.max() + 1
@@ -157,7 +157,7 @@ class Parser:
 		:param new_corpus_path:
 		:return:
 		"""
-		parser = Parser()
+		parser = Parser2()
 		parser.load_w2v_model()
 
 		corpus = open(corpus_path, 'r', encoding='utf-8')
@@ -210,8 +210,8 @@ class Parser:
 if __name__ == '__main__':
 	# Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv', write_every=3)
 	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
-	Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-completv3.tsv', 'corpus/iot-tweets-vector-v3.tsv',
-								write_every=10000)
+	Parser2.add_vector_to_corpus('corpus/iot-tweets-2009-2016-completv3.tsv', 'corpus/iot-tweets-vector-v3.tsv',
+								 write_every=10000)
 
 # matrix = Parser.corpus_to_sparse_matrix('corpus/iot-tweets-vector-new.tsv')
 # print(matrix)

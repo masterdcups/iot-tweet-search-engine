@@ -9,7 +9,7 @@ from keras.regularizers import l2
 from sklearn.model_selection import train_test_split
 
 from definitions import ROOT_DIR
-from parser import Parser
+from parser2 import Parser2
 
 
 def get_model(num_users, num_items, latent_dim, regs=[0, 0]):
@@ -166,8 +166,8 @@ def get_negatives_tweets(matrix, user_id):
 
 
 def build_matrix():
-	corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-10.tsv'),
-											  categorize=True)
+	corpus = Parser2.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-10.tsv'),
+											   categorize=True)
 
 	num_users = corpus.User_ID_u.max() + 1
 	num_tweets = corpus.TweetID_u.max() + 1
@@ -204,8 +204,8 @@ def save_model(model_out_file, model, epoch):
 
 
 def load_corpus(num_negatives):
-	original_corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-10.tsv'),
-													   categorize=True)
+	original_corpus = Parser2.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-10.tsv'),
+														categorize=True)
 	num_users = original_corpus.User_ID_u.max() + 1
 	num_tweets = original_corpus.TweetID_u.max() + 1
 

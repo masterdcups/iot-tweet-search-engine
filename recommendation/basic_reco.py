@@ -4,9 +4,8 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 from definitions import ROOT_DIR
-from parser import Parser
+from parser2 import *
 from user import User
-
 
 class BasicReco:
 
@@ -16,7 +15,7 @@ class BasicReco:
 	def load_corpus(self, corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-new.tsv')):
 		if self.corpus is not None:
 			return
-		self.corpus = Parser.parsing_iot_corpus_pandas(corpus_path)
+		self.corpus = Parser2.parsing_iot_corpus_pandas(corpus_path)
 
 	def recommended_tweets(self, main_user, k_best=5):
 		"""

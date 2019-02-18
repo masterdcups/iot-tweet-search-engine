@@ -4,8 +4,7 @@ import numpy as np
 
 from definitions import ROOT_DIR
 from model_prediction import ModelPrediction
-from parser import Parser
-
+from parser2 import *
 
 class PredictionProfile:
     """Class to predict users' sentiment, gender and country"""
@@ -30,7 +29,7 @@ class PredictionProfile:
 
 
 if __name__ == '__main__':
-    corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'))
+    corpus = Parser2.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'))
     pred = PredictionProfile(pd_corpus=corpus)
 
     print(pred.gender_prediction(np.zeros(300)))
