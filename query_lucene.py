@@ -96,10 +96,12 @@ class QueryLucene:
 		:return: the reranked list of documents
 		"""
 		reranked = []
+		doc_vectors = self.parser.get_all_vectors(tweet_ids=[int(res["TweetID"]) for res in results])
 		for i in range(len(results)):
-			doc_vector = self.parser.get_vector(int(results[i]["TweetID"]), as_np_array=True)
-			if doc_vector is None:
+			if int(results[i]['TweetID']) not in doc_vectors:
 				doc_vector = np.zeros(300)
+			else:
+				doc_vector = np.array(doc_vectors[int(results[i]['TweetID'])])
 			sim = cosine_similarity(user_vector.reshape(1, -1), doc_vector.reshape(1, -1))
 			reranked.append({'doc': results[i], 'sim': sim[0][0]})
 			reranked = sorted(reranked, key=lambda k: k['sim'], reverse=True)
@@ -112,7 +114,7 @@ class QueryLucene:
 if __name__ == '__main__':
 	ql = QueryLucene()
 	ql.query_parser_must(["First sign of twitter as transport for"])
-	results = ql.get_results(nb_results=20)
+	results = ql.get_results()
 	docs = ql.rerank_results(results, np.zeros(300))[:10]
 	for doc in docs:
 		print(doc["Text"])

@@ -96,6 +96,12 @@ class Parser:
 		return list(filter(lambda token: token not in nltk.corpus.stopwords.words('english'), tokens))
 
 	def get_vector(self, tweet_id, as_np_array=False):
+		"""
+		Return the vector of a specific tweet
+		:param tweet_id: id of the tweet
+		:param as_np_array: convert the vector into numpy.array
+		:return: vector: list or numpy.array
+		"""
 		if self.session.query(Tweet.vector).filter_by(id=int(tweet_id)).first() is None:
 			return None
 		vector = self.session.query(Tweet.vector).filter_by(id=int(tweet_id)).first()[0]
@@ -104,6 +110,23 @@ class Parser:
 			vector = np.array(vector)
 
 		return vector
+
+	def get_all_vectors(self, tweet_ids=None, limit=None):
+		"""
+		Return all the vectors
+		:param tweet_ids: is specifided, filter the vectors to return with tweet_id
+		:param limit: nb of results
+		:return: dict tweet_id -> vector (list)
+		"""
+		query = self.session.query(Tweet.id, Tweet.vector)
+
+		if tweet_ids is not None:
+			query = query.filter(Tweet.id.in_(tweet_ids))
+		if limit is not None:
+			query = query.limit(limit)
+
+		return dict(query.all())
+
 
 	@staticmethod
 	def parsing_iot_corpus_pandas(corpus_path, separator='\t', categorize=False, vector_asarray=True):
@@ -237,5 +260,7 @@ class Parser:
 
 if __name__ == '__main__':
 	p = Parser()
+	print(p.get_all_vectors(limit=20))
+	exit()
 	vector = p.get_vector(80434341692663808089, as_np_array=True)
 	print(vector)
