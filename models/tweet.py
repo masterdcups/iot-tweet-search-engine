@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Text, Integer, DateTime, ARRAY, Float, func
+from sqlalchemy.ext.declarative import declarative_base
 
-from build_database import Base
+Base = declarative_base()
 
 
 class Tweet(Base):
