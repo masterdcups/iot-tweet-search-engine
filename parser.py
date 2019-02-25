@@ -20,7 +20,7 @@ class Parser:
 		self.spell_check = None
 
 		preprocessor.set_options(preprocessor.OPT.URL, preprocessor.OPT.MENTION, preprocessor.OPT.RESERVED,
-								 preprocessor.OPT.EMOJI, preprocessor.OPT.SMILEY)
+		                         preprocessor.OPT.EMOJI, preprocessor.OPT.SMILEY)
 
 	def clean_tweet(self, tweet_text):
 		"""
@@ -84,7 +84,7 @@ class Parser:
 		return list(filter(lambda token: token not in nltk.corpus.stopwords.words('english'), tokens))
 
 	@staticmethod
-	def parsing_iot_corpus_pandas(corpus_path, separator='\t', categorize=False):
+	def parsing_iot_corpus_pandas(corpus_path, separator='\t', categorize=False, vector_asarray=True):
 		"""
 		Parse the corpus and return a Pandas DataFrame
 		:param categorize: boolean to make the tweet and user ids start to 0
@@ -100,7 +100,9 @@ class Parser:
 			df['TweetID_u'] = df.TweetID.astype('category').cat.codes.values
 			df = df[df.User_ID_u >= 0]
 
-		df['Vector'] = df.apply(lambda row: np.asarray([float(x) for x in row['Vector'][1:-1].split(', ')]), axis=1)
+		# This takes 20 seconds
+		if vector_asarray:
+			df['Vector'] = df.apply(lambda row: np.asarray([float(x) for x in row['Vector'][1:-1].split(', ')]), axis=1)
 
 		return df
 
@@ -122,6 +124,10 @@ class Parser:
 
 		return mat
 
+	@staticmethod
+	def vector_string_to_array(vector):
+		return np.asarray([float(x) for x in vector[1:-1].split(', ')])
+
 	def tweet2vec(self, tweet_text):
 		sentence_vector = []
 		self.load_w2v_model()
@@ -140,7 +146,7 @@ class Parser:
 		return np.mean(sentence_vector, axis=0)
 
 	def load_w2v_model(self,
-					   path_to_pretrained_model=os.path.join(ROOT_DIR, 'corpus/GoogleNews-vectors-negative300.bin')):
+	                   path_to_pretrained_model=os.path.join(ROOT_DIR, 'corpus/GoogleNews-vectors-negative300.bin')):
 		if self.model is not None:
 			return
 
@@ -206,12 +212,3 @@ class Parser:
 
 		nltk.download('stopwords')
 
-
-if __name__ == '__main__':
-	# Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv', write_every=3)
-	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
-	Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-completv3.tsv', 'corpus/iot-tweets-vector-v3.tsv',
-								write_every=10000)
-
-# matrix = Parser.corpus_to_sparse_matrix('corpus/iot-tweets-vector-new.tsv')
-# print(matrix)
