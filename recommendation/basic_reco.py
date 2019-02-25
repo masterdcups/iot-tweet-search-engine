@@ -11,9 +11,10 @@ from user import User
 class BasicReco:
 
 	def __init__(self):
+		self.corpus = None
 		self.load_corpus()
 
-	def load_corpus(self, corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-new.tsv')):
+	def load_corpus(self, corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v31.tsv')):
 		if self.corpus is not None:
 			return
 		self.corpus = Parser.parsing_iot_corpus_pandas(corpus_path)

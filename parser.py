@@ -141,9 +141,9 @@ class Parser:
 		df = pd.read_csv(corpus_path, sep=separator, dtype={'User_ID': object})  # , index_col="TweetID"
 		df = df.dropna(subset=['User_ID'])  # remove tweets without users
 		if categorize:
-			df.User_ID = df.User_ID.astype('category').cat.codes.values
-			df.TweetID = df.TweetID.astype('category').cat.codes.values
-			df = df[df.User_ID >= 0]
+			df['User_ID_u'] = df.User_ID.astype('category').cat.codes.values
+			df['TweetID_u'] = df.TweetID.astype('category').cat.codes.values
+			df = df[df.User_ID_u >= 0]
 
 		# This takes 20 seconds
 		if vector_asarray:
