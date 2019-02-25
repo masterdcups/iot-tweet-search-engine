@@ -7,20 +7,32 @@ import pandas as pd
 import preprocessor
 import scipy.sparse as sp
 from spellchecker import SpellChecker
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from definitions import ROOT_DIR
+from models.tweet import Tweet
 
 
 class Parser:
+	ENGINE_ADDR = 'postgresql+psycopg2://postgres:password@localhost:5432/iot_tweet'  # 'postgresql+psycopg2://postgres:password@/iot_tweet?host=/cloudsql/iot-tweet:europe-west3:main-instance'
 
 	def __init__(self):
 		self.load_nltk()
 		self.model = None
 		self.abbreviations = None
 		self.spell_check = None
+		self.session = None
 
 		preprocessor.set_options(preprocessor.OPT.URL, preprocessor.OPT.MENTION, preprocessor.OPT.RESERVED,
-		                         preprocessor.OPT.EMOJI, preprocessor.OPT.SMILEY)
+								 preprocessor.OPT.EMOJI, preprocessor.OPT.SMILEY)
+
+		self.load_db_tweets()
+
+	def load_db_tweets(self):
+		engine = create_engine(Parser.ENGINE_ADDR, echo=True)
+		Session = sessionmaker(bind=engine)
+		self.session = Session()
 
 	def clean_tweet(self, tweet_text):
 		"""
@@ -83,6 +95,39 @@ class Parser:
 
 		return list(filter(lambda token: token not in nltk.corpus.stopwords.words('english'), tokens))
 
+	def get_vector(self, tweet_id, as_np_array=False):
+		"""
+		Return the vector of a specific tweet
+		:param tweet_id: id of the tweet
+		:param as_np_array: convert the vector into numpy.array
+		:return: vector: list or numpy.array
+		"""
+		if self.session.query(Tweet.vector).filter_by(id=int(tweet_id)).first() is None:
+			return None
+		vector = self.session.query(Tweet.vector).filter_by(id=int(tweet_id)).first()[0]
+
+		if as_np_array:
+			vector = np.array(vector)
+
+		return vector
+
+	def get_all_vectors(self, tweet_ids=None, limit=None):
+		"""
+		Return all the vectors
+		:param tweet_ids: is specifided, filter the vectors to return with tweet_id
+		:param limit: nb of results
+		:return: dict tweet_id -> vector (list)
+		"""
+		query = self.session.query(Tweet.id, Tweet.vector)
+
+		if tweet_ids is not None:
+			query = query.filter(Tweet.id.in_(tweet_ids))
+		if limit is not None:
+			query = query.limit(limit)
+
+		return dict(query.all())
+
+
 	@staticmethod
 	def parsing_iot_corpus_pandas(corpus_path, separator='\t', categorize=False, vector_asarray=True):
 		"""
@@ -143,10 +188,10 @@ class Parser:
 		if len(sentence_vector) == 0:
 			sentence_vector.append(np.zeros_like(self.model.wv["tax"]))
 
-		return np.mean(sentence_vector, axis=0)
+		return np.mean(sentence_vector, axis=0, dtype=float)
 
 	def load_w2v_model(self,
-	                   path_to_pretrained_model=os.path.join(ROOT_DIR, 'corpus/GoogleNews-vectors-negative300.bin')):
+					   path_to_pretrained_model=os.path.join(ROOT_DIR, 'corpus/GoogleNews-vectors-negative300.bin')):
 		if self.model is not None:
 			return
 
@@ -214,15 +259,8 @@ class Parser:
 
 
 if __name__ == '__main__':
-	# Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv', write_every=3)
-	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
-	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-completv3.tsv', 'corpus/iot-tweets-vector-v3.tsv',
-	# 							write_every=100)
-	import time
-
-	start_time = time.time()
-	Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'))
-	print("--- %s seconds ---" % (time.time() - start_time))
-
-# matrix = Parser.corpus_to_sparse_matrix('corpus/iot-tweets-vector-new.tsv')
-# print(matrix)
+	p = Parser()
+	print(p.get_all_vectors(limit=20))
+	exit()
+	vector = p.get_vector(80434341692663808089, as_np_array=True)
+	print(vector)
