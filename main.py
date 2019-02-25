@@ -1,11 +1,11 @@
-from parser2 import Parser2
+from parser import Parser
 from query_influencer_detection import QueryInfluencerDetection
 from topics_classifier import TopicsClassifier
 
 if __name__ == '__main__':
 	# Sample of getting influencers processus
 
-	parser = Parser2()  # instance of parser
+	parser = Parser()  # instance of parser
 
 	# queries
 	cleaned_tweet1 = parser.clean_tweet('smart watch #iot #watch')

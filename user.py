@@ -4,10 +4,9 @@ import networkx as nx
 import numpy as np
 
 from definitions import ROOT_DIR
-from parser2 import *
+from parser import Parser
 from prediction_profile import PredictionProfile
 from topics_classifier import TopicsClassifier
-
 
 
 class User:
@@ -221,6 +220,6 @@ class User:
 
 
 if __name__ == '__main__':
-	corpus = Parser2.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'))
+	corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'))
 	print('Corpus Loaded')
 	User.create_authors(corpus)
