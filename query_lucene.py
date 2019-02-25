@@ -17,8 +17,7 @@ from parser import Parser
 class QueryLucene:
 	"""Match documents from the corpus with queries using lucene"""
 
-	def __init__(self, index_path=os.path.join(ROOT_DIR, 'corpus/indexRI'),
-	             corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv')):
+	def __init__(self, index_path=os.path.join(ROOT_DIR, 'corpus/indexRI')):
 		"""
 		Lucene components initialization
 		:param index_path: path of the index
@@ -29,7 +28,7 @@ class QueryLucene:
 		self.reader = DirectoryReader.open(self.index)
 		self.searcher = IndexSearcher(self.reader)
 		self.constrained_query = BooleanQuery.Builder()
-		self.corpus = Parser.parsing_iot_corpus_pandas(corpus_path, vector_asarray=False)
+		self.parser = Parser()
 
 	def query_parser_filter(self, field_values, field_filter=['Vector']):
 		"""
@@ -97,12 +96,12 @@ class QueryLucene:
 		:return: the reranked list of documents
 		"""
 		reranked = []
+		doc_vectors = self.parser.get_all_vectors(tweet_ids=[int(res["TweetID"]) for res in results])
 		for i in range(len(results)):
-			doc_vector = self.corpus[self.corpus.TweetID == int(results[i]["TweetID"])].Vector
-			if len(doc_vector.values) > 0:
-				doc_vector = Parser.vector_string_to_array(doc_vector.values[0])
-			else:
+			if int(results[i]['TweetID']) not in doc_vectors:
 				doc_vector = np.zeros(300)
+			else:
+				doc_vector = np.array(doc_vectors[int(results[i]['TweetID'])])
 			sim = cosine_similarity(user_vector.reshape(1, -1), doc_vector.reshape(1, -1))
 			reranked.append({'doc': results[i], 'sim': sim[0][0]})
 			reranked = sorted(reranked, key=lambda k: k['sim'], reverse=True)
