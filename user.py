@@ -3,7 +3,9 @@ import os
 import networkx as nx
 import numpy as np
 
+from db import DB
 from definitions import ROOT_DIR
+from models.tweet import Tweet
 from parser import Parser
 from prediction_profile import PredictionProfile
 from topics_classifier import TopicsClassifier
@@ -187,7 +189,7 @@ class User:
 			f.close()
 
 	@staticmethod
-	def create_authors(corpus):
+	def create_authors():
 		"""
 		Generate the authors_profile.tsv file
 		To perform just ONE time
@@ -195,13 +197,15 @@ class User:
 		:return:
 		"""
 
-		tpc = TopicsClassifier(pd_corpus=corpus)
-		pp = PredictionProfile(pd_corpus=corpus)
+		tpc = TopicsClassifier()
+		pp = PredictionProfile()
 
-		for index, tweet in corpus.iterrows():
-			u = User(tweet.User_Name)
+		query = DB.get_instance().query(Tweet.user_name, Tweet.vector).filter('user_name is not null')
+
+		for t in query.all():
+			u = User(t[0])
 			u.load()
-			u.update_profile(Parser.vector_string_to_array(tweet.Vector), predict=False)
+			u.update_profile(Parser.vector_string_to_array(t[1]), predict=False)
 			u.save()
 
 		graph = User.load_graph()
@@ -220,7 +224,7 @@ class User:
 
 
 if __name__ == '__main__':
-	corpus = Parser.parsing_vector_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'),
-												 vector_asarray=False)
-	print('Corpus Loaded')
-	User.create_authors(corpus)
+	# corpus = Parser.parsing_vector_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'),
+	# 											 vector_asarray=False)
+	# print('Corpus Loaded')
+	User.create_authors()

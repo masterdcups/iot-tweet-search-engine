@@ -4,8 +4,9 @@ import numpy as np
 from joblib import dump, load
 from sklearn.ensemble import RandomForestClassifier
 
+from db import DB
 from definitions import ROOT_DIR
-from parser import Parser
+from models.tweet import Tweet
 
 
 class TopicsClassifier:
@@ -13,7 +14,6 @@ class TopicsClassifier:
 
 	def __init__(self, dir_path=os.path.join(ROOT_DIR, 'saved_models'), pd_corpus=None):
 		"""
-
 		:type pd_corpus: pandas.DataFrame
 		"""
 		self.model = None
@@ -23,13 +23,15 @@ class TopicsClassifier:
 			os.mkdir(dir_path)
 		self.model_path = os.path.join(dir_path, TopicsClassifier.model_name)
 
-	def train(self):
-		if self.corpus is None:
-			self.corpus = Parser.parsing_vector_corpus_pandas(os.path.join(ROOT_DIR, "corpus/iot-tweets-vector-v3.tsv"))
-			print('Corpus loaded')
+	def train(self, limit: int = None):
 
-		X = self.corpus.Vector.tolist()
-		y = self.corpus.TopicID.tolist()
+		X, y = [], []
+		query = DB.get_instance().query(Tweet.vector, Tweet.topic_id).filter('topic_id is not null')
+		if limit is not None:
+			query = query.limit(limit)
+		for i in query.all():
+			X.append(i[0])
+			y.append(i[1])
 
 		self.model = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=0)
 		# self.model = SVC(gamma='auto')
@@ -61,4 +63,6 @@ class TopicsClassifier:
 if __name__ == '__main__':
 	print('TopicClassifier')
 	clf = TopicsClassifier()
+	clf.train(limit=100000)
+	clf.save()
 	print(clf.predict(np.zeros(300).reshape(1, -1)))

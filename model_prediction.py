@@ -15,13 +15,26 @@ class ModelPrediction:
 	path_sent_mod = 'sentiment_model.joblib'
 	path_coun_mod = 'country_model.joblib'
 
-	def __init__(self, corpus=None, dir_path=os.path.join(ROOT_DIR, 'saved_models')):
+	def __init__(self, iterator, corpus=None, dir_path=os.path.join(ROOT_DIR, 'saved_models')):
 		"""
 
 		:type corpus: pandas.DataFrame
 		"""
 		self.dir_path = dir_path
 		self.tweets = corpus
+		self.iterator = iterator
+
+		self.X = []
+		self.gender = []
+		self.sentiment = []
+		self.country = []
+
+		for i in self.iterator:
+			vector, sentiment, gender, country = i
+			self.X.append(vector)
+			self.gender.append(gender)
+			self.sentiment.append(sentiment)
+			self.country.append(country)
 
 		self.gender_mod = None
 		self.sentiment_mod = None
@@ -40,13 +53,10 @@ class ModelPrediction:
 
 		if not os.path.exists(full_path):
 
-			self.load_corpus()
-
-			X = self.tweets.Vector.tolist()
-			y = self.tweets.Gender.tolist()
+			y = self.gender
 
 			self.gender_mod = svm.SVC(kernel='linear')
-			self.gender_mod.fit(X, y)
+			self.gender_mod.fit(self.X, y)
 
 			dump(self.gender_mod, full_path)
 		else:
@@ -61,13 +71,10 @@ class ModelPrediction:
 
 		if not os.path.exists(full_path):
 
-			self.load_corpus()
-
-			X = self.tweets.Vector.tolist()
-			y = self.tweets.Sentiment.tolist()
+			y = self.sentiment
 
 			self.sentiment_mod = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
-			self.sentiment_mod.fit(X, y)
+			self.sentiment_mod.fit(self.X, y)
 
 			dump(self.sentiment_mod, full_path)
 		else:
@@ -82,13 +89,10 @@ class ModelPrediction:
 
 		if not os.path.exists(full_path):
 
-			self.load_corpus()
-
-			X = self.tweets.Vector.tolist()
-			y = self.tweets.Country.tolist()
+			y = self.country
 
 			self.country_mod = GaussianNB()
-			self.country_mod.fit(X, y)
+			self.country_mod.fit(self.X, y)
 
 			dump(self.country_mod, full_path)
 		else:
@@ -101,8 +105,7 @@ class ModelPrediction:
 		self.load_corpus()
 
 		if type_model == "SVM":
-			X = self.tweets.Vector.tolist()
-			y = self.tweets.Gender.tolist()
+			y = self.gender
 
 			model = svm.SVC()
 			param_grid = [
@@ -110,13 +113,12 @@ class ModelPrediction:
 				{'C': [1, 10, 100, 1000], 'gamma': [0.001, 0.0001], 'kernel': ['rbf']},
 			]
 			clf = GridSearchCV(model, param_grid, n_jobs=-1, cv=3)
-			clf.fit(X, y)
+			clf.fit(self.X, y)
 
 			# Best parameter set
 			print('Best parameters found:\n', clf.best_params_)
 		else:
-			X = self.tweets.Vector.tolist()
-			y = self.tweets.Sentiment.tolist()
+			y = self.sentiment
 
 			model = MLPClassifier(max_iter=100)
 			param_grid = {
@@ -127,7 +129,7 @@ class ModelPrediction:
 				'learning_rate': ['constant', 'adaptive'],
 			}
 			clf = GridSearchCV(model, param_grid, n_jobs=-1, cv=3)
-			clf.fit(X, y)
+			clf.fit(self.X, y)
 
 			# Best parameter set
 			print('Best parameters found:\n', clf.best_params_)
