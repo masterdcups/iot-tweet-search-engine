@@ -214,15 +214,11 @@ class Parser:
 
 
 if __name__ == '__main__':
+	exit()
 	# Parser.add_vector_to_corpus('corpus/fake-iot-corpus2.tsv', 'corpus/test.tsv', write_every=3)
 	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-complet.tsv', 'corpus/iot-tweets-vector.tsv')
-	# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-completv3.tsv', 'corpus/iot-tweets-vector-v3.tsv',
-	# 							write_every=100)
-	import time
-
-	start_time = time.time()
-	Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'))
-	print("--- %s seconds ---" % (time.time() - start_time))
+# Parser.add_vector_to_corpus('corpus/iot-tweets-2009-2016-completv3.tsv', 'corpus/iot-tweets-vector-v3.tsv',
+# 							write_every=1000)
 
 # matrix = Parser.corpus_to_sparse_matrix('corpus/iot-tweets-vector-new.tsv')
 # print(matrix)
