@@ -12,12 +12,13 @@ from models.tweet import Tweet
 class TopicsClassifier:
 	model_name = 'topic_model.joblib'
 
-	def __init__(self, dir_path=os.path.join(ROOT_DIR, 'saved_models'), pd_corpus=None):
+	def __init__(self, dir_path=os.path.join(ROOT_DIR, 'saved_models'), pd_corpus=None, limit=None):
 		"""
 		:type pd_corpus: pandas.DataFrame
 		"""
 		self.model = None
 		self.corpus = pd_corpus
+		self.limit = limit
 
 		if not os.path.exists(dir_path):
 			os.mkdir(dir_path)
@@ -52,7 +53,7 @@ class TopicsClassifier:
 
 	def predict(self, vector):
 		if not os.path.exists(self.model_path):
-			self.train()
+			self.train(limit=self.limit)
 			self.save()
 		else:
 			self.load()

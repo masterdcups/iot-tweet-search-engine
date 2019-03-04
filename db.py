@@ -12,11 +12,11 @@ class DB:
 	def get_instance():
 		if DB.db is None:
 			print('new db')
-			DB.db = DB._load_db_tweets()
+			DB.db = DB._load_db()
 		return DB.db
 
 	@staticmethod
-	def _load_db_tweets():
+	def _load_db():
 		engine = create_engine(DB.ENGINE_ADDR, echo=True)
 		Session = sessionmaker(bind=engine)
 		return Session()
