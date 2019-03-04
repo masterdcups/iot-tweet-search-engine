@@ -114,7 +114,7 @@ class Parser:
 	def get_all_vectors(self, tweet_ids=None, limit=None):
 		"""
 		Return all the vectors
-		:param tweet_ids: is specifided, filter the vectors to return with tweet_id
+		:param tweet_ids: is specified, filter the vectors to return with tweet_id
 		:param limit: nb of results
 		:return: dict tweet_id -> vector (list)
 		"""
