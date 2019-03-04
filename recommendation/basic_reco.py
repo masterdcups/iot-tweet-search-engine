@@ -4,8 +4,8 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 from definitions import ROOT_DIR
+from models.user import User
 from parser import Parser
-from user import User
 
 
 class BasicReco:
@@ -21,17 +21,16 @@ class BasicReco:
 
 	def recommended_tweets(self, main_user, k_best=5):
 		"""
-		Use the cosine simmilarity between the main user thematic vector and all the tweets vectos
+		Use the cosine similarity between the main user thematic vector and all the tweets vectors
 		:param main_user: str, name of the user
 		:param k_best: number of results to return
 		:return: list of recommended tweets
 		"""
-		user = User(main_user)
-		user.load()
+		user = User.load(main_user)
 
 		# Add cosine similarity between main_user and all others tweets to DataFrame
 		self.corpus['cosine_sim'] = cosine_similarity(np.matrix(self.corpus['Vector'].tolist()),
-													  user.vec.reshape(1, -1))
+													  user.vector.reshape(1, -1))
 
 		# Sort the DataFrame by cosine_sim
 		self.corpus = self.corpus.sort_values(by=['cosine_sim'], ascending=False)

@@ -3,6 +3,8 @@ from sqlalchemy import Column, Text, Integer, DateTime, ARRAY, Float, func
 from sqlalchemy.ext.declarative import declarative_base
 
 from db import DB
+from prediction_profile import PredictionProfile
+from topics_classifier import TopicsClassifier
 
 Base = declarative_base()
 
@@ -30,3 +32,31 @@ class User(Base):
 			u.vector = np.zeros(300)
 			DB.get_instance().add(u)
 		return u
+
+	def predict_profile(self, topics_classifier, prediction_profile):
+		"""
+		Call all the predictions models to fill the localisation, gender, etc
+		:return:
+		"""
+
+		self.localisation = prediction_profile.country_prediction(self.vector)
+		self.gender = prediction_profile.gender_prediction(self.vector)
+		self.emotion = prediction_profile.sentiment_prediction(self.vector)
+		self.topic_vector = topics_classifier.predict(self.vector.reshape(1, -1))[0]
+
+	def update_profile(self, vec):
+		"""
+		Update the profile of the user with the new vec param
+		:param vec: (np.array) vector of the tweet to add
+		:param predict: (boolean) whether to predict localisation, gender, etc or not
+		:return:
+		"""
+		self.nb_click += 1
+		for i in range(len(self.vector)):
+			self.vector[i] = (self.vector[i] * (self.nb_click - 1)) / self.nb_click + (vec[i] / self.nb_click)
+
+		tpc = TopicsClassifier()
+		pp = PredictionProfile()
+		self.predict_profile(tpc, pp)
+
+		DB.get_instance().commit()
