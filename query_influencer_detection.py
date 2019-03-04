@@ -1,14 +1,15 @@
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
-from user import User
+from db import DB
+from models.author import Author
 
 
 class QueryInfluencerDetection:
 
 	def __init__(self):
 		self.topic_vector = None
-		self.authors = User.get_all_authors()
+		self.authors = DB.get_instance().query(Author)
 		self.users_topic_vec = [u.topic_vector for u in self.authors]
 
 	def get_influencers(self, topic_vector, percentage_top_user=.5):
