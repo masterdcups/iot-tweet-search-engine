@@ -54,12 +54,15 @@ class Author(Base):
 			self.vector[i] = (self.vector[i] * (self.nb_click - 1)) / self.nb_click + (vec[i] / self.nb_click)
 
 	@staticmethod
-	def create_authors():
-		tpc = TopicsClassifier()
-		pp = PredictionProfile()
+	def create_authors(limit=None):
+		tpc = TopicsClassifier(limit=limit)
+		pp = PredictionProfile(limit=limit)
 
 		query = DB.get_instance().query(Tweet.user_id, Tweet.vector, Tweet.user_name).filter(
-			'user_id is not null').limit(100)
+			'user_id is not null')
+
+		if limit is not None:
+			query = query.limit(limit)
 
 		for t in query.all():
 			a = Author.load(t.user_id)
@@ -80,9 +83,9 @@ class Author(Base):
 		DB.get_instance().commit()
 
 	@staticmethod
-	def load_graph(filename=os.path.join(ROOT_DIR, 'corpus/author_graph.net')):
+	def load_graph(filename=os.path.join(ROOT_DIR, 'corpus/followers_matrix.tsv')):
 		return nx.DiGraph(nx.read_adjlist(filename))
 
 
 if __name__ == '__main__':
-	Author.create_authors()
+	Author.create_authors(limit=50)
