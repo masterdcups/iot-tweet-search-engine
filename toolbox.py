@@ -36,7 +36,7 @@ def format_follow_matrix():
 		friends = [f[1:-1] for f in parts[2][1:-1].split(', ')]
 
 		if user_name not in users:
-			users[user_name] = followers
+			users[user_name] = friends
 
 	for u in users:
 		f2.write(u + '\t' + '\t'.join(users[u]) + '\n')
