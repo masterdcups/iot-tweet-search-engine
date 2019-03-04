@@ -17,7 +17,7 @@ class BasicReco:
 	def load_corpus(self, corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v31.tsv')):
 		if self.corpus is not None:
 			return
-		self.corpus = Parser.parsing_iot_corpus_pandas(corpus_path)
+		self.corpus = Parser.parsing_vector_corpus_pandas(corpus_path)
 
 	def recommended_tweets(self, main_user, k_best=5):
 		"""

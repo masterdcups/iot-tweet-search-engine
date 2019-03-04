@@ -129,7 +129,7 @@ class Parser:
 
 
 	@staticmethod
-	def parsing_iot_corpus_pandas(corpus_path, separator='\t', categorize=False, vector_asarray=True):
+	def parsing_vector_corpus_pandas(corpus_path, separator='\t', categorize=False, vector_asarray=True):
 		"""
 		Parse the corpus and return a Pandas DataFrame
 		:param categorize: boolean to make the tweet and user ids start to 0
@@ -152,8 +152,28 @@ class Parser:
 		return df
 
 	@staticmethod
+	def parsing_base_corpus_pandas(corpus_path, separator='\t', categorize=False):
+		"""
+		Parse the corpus and return a Pandas DataFrame
+		:param categorize: boolean to make the tweet and user ids start to 0
+		:param separator:
+		:param corpus_path: path of the corpus
+		:return: pandas.DataFrame
+		"""
+
+		df = pd.read_csv(corpus_path, sep=separator, dtype={'User_ID': object})  # , index_col="TweetID"
+		df = df.dropna(subset=['User_ID'])  # remove tweets without users
+
+		if categorize:
+			df['User_ID_u'] = df.User_ID.astype('category').cat.codes.values
+			df['TweetID_u'] = df.TweetID.astype('category').cat.codes.values
+			df = df[df.User_ID_u >= 0]
+
+		return df
+
+	@staticmethod
 	def corpus_to_sparse_matrix(corpus_path):
-		corpus = Parser.parsing_iot_corpus_pandas(corpus_path)
+		corpus = Parser.parsing_vector_corpus_pandas(corpus_path)
 
 		num_users = corpus.User_ID.max() + 1
 		num_tweets = corpus.TweetID.max() + 1

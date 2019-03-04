@@ -32,7 +32,7 @@ class ModelPrediction:
 
 	def load_corpus(self):
 		if self.tweets is None:
-			self.tweets = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, "corpus/iot-tweets-vector-v3.tsv"))
+			self.tweets = Parser.parsing_vector_corpus_pandas(os.path.join(ROOT_DIR, "corpus/iot-tweets-vector-v3.tsv"))
 
 	def gender_model(self, file_path=path_gend_mod):
 		"""Method to create model prediction user's gender using a SVM classifier"""
@@ -134,7 +134,7 @@ class ModelPrediction:
 
 
 if __name__ == '__main__':
-	corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'))
+	corpus = Parser.parsing_vector_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'))
 	model = ModelPrediction(corpus=corpus)
 	model.tweak_hyperparameters("SVM")
 	model.tweak_hyperparameters("MLP")

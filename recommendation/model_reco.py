@@ -40,7 +40,7 @@ class ModelReco:
 		:return: pd.DataFrame object
 		"""
 
-		original_corpus = Parser.parsing_iot_corpus_pandas(corpus_path, categorize=True)
+		original_corpus = Parser.parsing_base_corpus_pandas(corpus_path, categorize=True)
 
 		self.num_users = len(original_corpus.User_Name.unique())
 		self.num_tweets = len(original_corpus.TweetID.unique())
@@ -163,7 +163,8 @@ class ModelReco:
 if __name__ == '__main__':
 	for method in ["gmf", "mf", "neumf", "nnmf"]:
 		m = ModelReco(method)
-		m.load_corpus()
+		m.load_corpus(corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-2009-2016-completv3.tsv'),
+					  like_rt_graph=os.path.join(ROOT_DIR, 'corpus/likes_matrix.tsv'))
 		m.create_model()
 		m.train()
 		m.save()

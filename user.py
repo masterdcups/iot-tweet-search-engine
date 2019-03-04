@@ -220,7 +220,7 @@ class User:
 
 
 if __name__ == '__main__':
-  corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'),
-	                                          vector_asarray=False)
+	corpus = Parser.parsing_vector_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v3.tsv'),
+												 vector_asarray=False)
 	print('Corpus Loaded')
 	User.create_authors(corpus)
