@@ -1,13 +1,13 @@
 import os
+from parser import Parser
 
+import pandas as pd
+from definitions import ROOT_DIR
 from joblib import dump, load
 from sklearn import svm
 from sklearn.model_selection import GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
-
-from definitions import ROOT_DIR
-from parser import Parser
 
 
 class ModelPrediction:
@@ -102,8 +102,6 @@ class ModelPrediction:
 		return self.country_mod
 
 	def tweak_hyperparameters(self, type_model):
-		self.load_corpus()
-
 		if type_model == "SVM":
 			y = self.gender
 
@@ -112,11 +110,6 @@ class ModelPrediction:
 				{'C': [1, 10, 100, 1000], 'kernel': ['linear']},
 				{'C': [1, 10, 100, 1000], 'gamma': [0.001, 0.0001], 'kernel': ['rbf']},
 			]
-			clf = GridSearchCV(model, param_grid, n_jobs=-1, cv=3)
-			clf.fit(self.X, y)
-
-			# Best parameter set
-			print('Best parameters found:\n', clf.best_params_)
 		else:
 			y = self.sentiment
 
@@ -128,11 +121,13 @@ class ModelPrediction:
 				'alpha': [0.0001, 0.05],
 				'learning_rate': ['constant', 'adaptive'],
 			}
-			clf = GridSearchCV(model, param_grid, n_jobs=-1, cv=3)
-			clf.fit(self.X, y)
 
-			# Best parameter set
-			print('Best parameters found:\n', clf.best_params_)
+		clf = GridSearchCV(model, param_grid, n_jobs=-1, cv=3)
+		clf.fit(self.X, y)
+
+		print('results of cross-validation :', pd.DataFrame(clf.cv_results_))
+		# Best parameter set
+		print('Best parameters found:\n', clf.best_params_)
 
 
 if __name__ == '__main__':
@@ -140,9 +135,9 @@ if __name__ == '__main__':
 	model = ModelPrediction(corpus=corpus)
 	model.tweak_hyperparameters("SVM")
 	model.tweak_hyperparameters("MLP")
-	# print(model.gender_model())
-	# print(model.sentiment_model())
-	# print(model.country_model())
-	# print(model.gender_model().predict(np.zeros(300).reshape(1, -1)))
-	# print(model.sentiment_model().predict(np.zeros(300).reshape(1, -1)))
-	# print(model.country_model().predict(np.zeros(300).reshape(1, -1)))
+# print(model.gender_model())
+# print(model.sentiment_model())
+# print(model.country_model())
+# print(model.gender_model().predict(np.zeros(300).reshape(1, -1)))
+# print(model.sentiment_model().predict(np.zeros(300).reshape(1, -1)))
+# print(model.country_model().predict(np.zeros(300).reshape(1, -1)))
