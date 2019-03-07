@@ -29,6 +29,7 @@ class BasicReco:
 		user = User.load(main_user)
 
 		# Add cosine similarity between main_user and all others tweets to DataFrame
+		# TODO use ProfileOneHotEncoder on the vectors for the similarity
 		self.corpus['cosine_sim'] = cosine_similarity(np.matrix(self.corpus['Vector'].tolist()),
 													  user.vector.reshape(1, -1))
 

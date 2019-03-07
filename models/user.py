@@ -30,6 +30,7 @@ class User(Base):
 			u = User()
 			u.nb_click = 0
 			u.vector = np.zeros(300)
+			u.gender = 'andy'
 			DB.get_instance().add(u)
 		return u
 
@@ -48,7 +49,6 @@ class User(Base):
 		"""
 		Update the profile of the user with the new vec param
 		:param vec: (np.array) vector of the tweet to add
-		:param predict: (boolean) whether to predict localisation, gender, etc or not
 		:return:
 		"""
 		self.nb_click += 1

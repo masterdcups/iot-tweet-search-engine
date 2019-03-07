@@ -46,7 +46,6 @@ class Author(Base):
 		"""
 		Update the profile of the user with the new vec param
 		:param vec: (np.array) vector of the tweet to add
-		:param predict: (boolean) whether to predict localisation, gender, etc or not
 		:return:
 		"""
 		self.nb_click += 1
