@@ -1,7 +1,6 @@
 from db import DB
-from models.tweet import Tweet
-
 from model_prediction import ModelPrediction
+from models.tweet import Tweet
 
 
 class PredictionProfile:
@@ -38,10 +37,10 @@ class PredictionProfile:
 
 
 if __name__ == '__main__':
-	pred = PredictionProfile(limit=1000)
+	pred = PredictionProfile()
 
 	pred.model_prediction.tweak_hyperparameters("SVM")
-# pred.model_prediction.tweak_hyperparameters("MLP")
+	pred.model_prediction.tweak_hyperparameters("MLP")
 #  print(pred.gender_prediction(np.zeros(300)))
 #  print(pred.sentiment_prediction(np.zeros(300)))
 #  print(pred.country_prediction(np.zeros(300)))
