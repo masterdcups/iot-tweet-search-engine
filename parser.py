@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import preprocessor
 import scipy.sparse as sp
-from spellchecker import SpellChecker
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -21,7 +20,6 @@ class Parser:
 		self.load_nltk()
 		self.model = None
 		self.abbreviations = None
-		self.spell_check = None
 		self.session = None
 
 		preprocessor.set_options(preprocessor.OPT.URL, preprocessor.OPT.MENTION, preprocessor.OPT.RESERVED,
@@ -50,12 +48,6 @@ class Parser:
 
 		return tokens
 
-	def load_spell_check(self):
-		if self.spell_check is not None:
-			return
-
-		self.spell_check = SpellChecker()
-
 	def load_abbreviations(self):
 		if self.abbreviations is not None:
 			return
@@ -83,15 +75,12 @@ class Parser:
 
 		return tokens
 
-	def remove_stopwords_spelling_mistakes(self, tokens):
+	def remove_stopwords(self, tokens):
 		"""
-		Remove stopwords and corrects spelling mistakes
-		:param spell: Object to correct spelling mistakes
+		Remove stopwords
 		:param tokens: words of the tweet
 		:return: words cleaned and corrected
 		"""
-
-		# self.load_spell_check()
 
 		return list(filter(lambda token: token not in nltk.corpus.stopwords.words('english'), tokens))
 
