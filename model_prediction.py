@@ -125,7 +125,9 @@ class ModelPrediction:
 		clf = GridSearchCV(model, param_grid, n_jobs=-1, cv=3)
 		clf.fit(self.X, y)
 
-		print('results of cross-validation :', pd.DataFrame(clf.cv_results_))
+		df = pd.DataFrame(clf.cv_results_)
+		print('results of cross-validation :', df)
+		df.to_csv(r''+type_model+'.txt', index=None, sep=' ')
 		# Best parameter set
 		print('Best parameters found:\n', clf.best_params_)
 
