@@ -5,7 +5,10 @@ from models.tweet import Tweet
 
 
 class DB:
-	ENGINE_ADDR = 'postgresql+psycopg2://postgres:password@localhost:5432/iot_tweet'  # 'postgresql+psycopg2://postgres:password@/iot_tweet?host=/cloudsql/iot-tweet:europe-west3:main-instance'
+	ENGINE_ADDR = 'postgresql+psycopg2://postgres:password@/iot_tweet?host=35.198.185.194'
+
+	# 'postgresql+psycopg2://postgres:password@/iot_tweet?host=/cloudsql/iot-tweet:europe-west3:main-instance'
+	# 'postgresql+psycopg2://postgres:password@localhost:5432/iot_tweet'
 	db = None
 
 	@staticmethod

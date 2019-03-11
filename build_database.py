@@ -9,8 +9,10 @@ from sqlalchemy.orm import sessionmaker
 from definitions import ROOT_DIR
 from parser import Parser
 
-engine_addr = 'postgresql+psycopg2://postgres:password@/iot_tweet?host=/cloudsql/iot-tweet:europe-west3:main-instance'
-# engine_addr = 'postgresql+psycopg2://postgres:password@localhost:5431/iot_tweet'
+engine_addr = 'postgresql+psycopg2://postgres:password@/iot_tweet?host=35.198.185.194'
+
+# 'postgresql+psycopg2://postgres:password@/iot_tweet?host=/cloudsql/iot-tweet:europe-west3:main-instance'
+# 'postgresql+psycopg2://postgres:password@localhost:5432/iot_tweet'
 
 engine = create_engine(engine_addr, echo=True)
 Base = declarative_base()
@@ -22,7 +24,7 @@ class Tweet(Base):
 	id = Column(Integer, primary_key=True)
 	date_created = Column(DateTime, default=func.current_timestamp())
 	date_modified = Column(DateTime, default=func.current_timestamp(),
-						   onupdate=func.current_timestamp())
+	                       onupdate=func.current_timestamp())
 	sentiment = Column(Text, nullable=True, unique=False)
 	topic_id = Column(Integer, nullable=True, unique=False)
 	country = Column(Text, nullable=True, unique=False)

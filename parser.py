@@ -14,7 +14,10 @@ from models.tweet import Tweet
 
 
 class Parser:
-	ENGINE_ADDR = 'postgresql+psycopg2://postgres:password@localhost:5432/iot_tweet'  # 'postgresql+psycopg2://postgres:password@/iot_tweet?host=/cloudsql/iot-tweet:europe-west3:main-instance'
+	ENGINE_ADDR = 'postgresql+psycopg2://postgres:password@/iot_tweet?host=35.198.185.194'
+
+	# 'postgresql+psycopg2://postgres:password@/iot_tweet?host=/cloudsql/iot-tweet:europe-west3:main-instance'
+	# 'postgresql+psycopg2://postgres:password@localhost:5432/iot_tweet'
 
 	def __init__(self):
 		self.load_nltk()
@@ -23,7 +26,7 @@ class Parser:
 		self.session = None
 
 		preprocessor.set_options(preprocessor.OPT.URL, preprocessor.OPT.MENTION, preprocessor.OPT.RESERVED,
-								 preprocessor.OPT.EMOJI, preprocessor.OPT.SMILEY)
+		                         preprocessor.OPT.EMOJI, preprocessor.OPT.SMILEY)
 
 		self.load_db_tweets()
 
@@ -116,7 +119,6 @@ class Parser:
 
 		return dict(query.all())
 
-
 	@staticmethod
 	def parsing_vector_corpus_pandas(corpus_path, separator='\t', categorize=False, vector_asarray=True):
 		"""
@@ -200,7 +202,7 @@ class Parser:
 		return np.mean(sentence_vector, axis=0, dtype=float)
 
 	def load_w2v_model(self,
-					   path_to_pretrained_model=os.path.join(ROOT_DIR, 'corpus/GoogleNews-vectors-negative300.bin')):
+	                   path_to_pretrained_model=os.path.join(ROOT_DIR, 'corpus/GoogleNews-vectors-negative300.bin')):
 		if self.model is not None:
 			return
 
