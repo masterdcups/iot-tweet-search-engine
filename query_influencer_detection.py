@@ -9,7 +9,7 @@ class QueryInfluencerDetection:
 
 	def __init__(self):
 		self.topic_vector = None
-		self.authors = DB.get_instance().query(Author)
+		self.authors = DB.get_instance().query(Author).all()
 		self.users_topic_vec = [u.topic_vector for u in self.authors]
 
 	def get_influencers(self, topic_vector, percentage_top_user=.5):
@@ -34,5 +34,6 @@ class QueryInfluencerDetection:
 
 if __name__ == '__main__':
 	qid = QueryInfluencerDetection()
-	influencers = qid.get_influencers(np.asarray([0.25, 0.25, 0.25, 0.25]))
+	influencers = qid.get_influencers(
+		np.array([0.12885133, 0.06695192, 0.22134557, 0.32720134, 0.08761362, 0.16803622]))
 	print(influencers)

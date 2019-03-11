@@ -1,6 +1,5 @@
 import os
 
-import lucene
 import numpy as np
 from java.io import File
 from org.apache.lucene.analysis.standard import StandardAnalyzer
@@ -11,6 +10,7 @@ from org.apache.lucene.store import SimpleFSDirectory
 from sklearn.metrics.pairwise import cosine_similarity
 
 from definitions import ROOT_DIR
+from models.tweet import Tweet
 from parser import Parser
 
 
@@ -22,7 +22,6 @@ class QueryLucene:
 		Lucene components initialization
 		:param index_path: path of the index
 		"""
-		lucene.initVM()
 		self.analyzer = StandardAnalyzer()
 		self.index = SimpleFSDirectory(File(index_path).toPath())
 		self.reader = DirectoryReader.open(self.index)
@@ -96,6 +95,10 @@ class QueryLucene:
 		:return: the reranked list of documents
 		"""
 		reranked = []
+
+		if isinstance(user_vector, list):
+			user_vector = np.array(user_vector)
+
 		doc_vectors = self.parser.get_all_vectors(tweet_ids=[int(res["TweetID"]) for res in results])
 		for i in range(len(results)):
 			if int(results[i]['TweetID']) not in doc_vectors:
@@ -103,7 +106,7 @@ class QueryLucene:
 			else:
 				doc_vector = np.array(doc_vectors[int(results[i]['TweetID'])])
 			sim = cosine_similarity(user_vector.reshape(1, -1), doc_vector.reshape(1, -1))
-			reranked.append({'doc': results[i], 'sim': sim[0][0]})
+			reranked.append({'doc': Tweet.load(results[i]['TweetID']), 'sim': sim[0][0]})
 			reranked = sorted(reranked, key=lambda k: k['sim'], reverse=True)
 		return [x['doc'] for x in reranked]
 

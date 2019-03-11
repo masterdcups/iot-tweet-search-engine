@@ -4,8 +4,7 @@
 {% block content %}
     <div class="row justify-content-center">
         <div class="col-md-6 mt-5 mb-3">
-            <h1 class="text-center">IOT-TWEETS</h1>
-            <form action="/" method="get" class="mt-5">
+            <form action="/" method="get" class="mt-3">
                 <div class="input-group">
                     <input type="text" class="form-control form-control-lg" name="query" placeholder="Query"
                            value="{{ query }}">
@@ -24,11 +23,21 @@
                 <tr>
                     <th>Text</th>
                     <th>User_Name</th>
+                    <th></th>
                 </tr>
                 {% for tweet in results %}
                     <tr>
-                        <td>{{ tweet.Text }}</td>
-                        <td>{{ tweet.User_Name }}</td>
+                        <td>{{ tweet.text }}</td>
+                        <td>{{ tweet.user_name }}</td>
+                        <td class="text-warning">
+                            {% if user is not none %}
+                                {% if tweet.is_faved(user) %}
+                                    <i class="fas fa-star fav_button" data-tweet-id="{{ tweet.id }}"></i>
+                                {% else %}
+                                    <i class="far fa-star fav_button" data-tweet-id="{{ tweet.id }}"></i>
+                                {% endif %}
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             </table>

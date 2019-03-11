@@ -1,6 +1,5 @@
-import os
+import lucene
 
-from definitions import ROOT_DIR
 from query_lucene import QueryLucene
 
 
@@ -11,7 +10,11 @@ class QueryLuceneManager:
 	def get_instance():
 		""" Static access method. """
 		if QueryLuceneManager.__instance is None:
-			QueryLuceneManager.__instance = QueryLucene(corpus_path=os.path.join(ROOT_DIR,"corpus/iot-tweets-2009-2016-completv3.tsv"))
+			lucene.initVM()
+			QueryLuceneManager.__instance = QueryLucene()
+
+		lucene.getVMEnv().attachCurrentThread()
+
 		return QueryLuceneManager.__instance
 
 if __name__ == '__main__':
