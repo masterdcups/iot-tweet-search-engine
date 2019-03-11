@@ -113,6 +113,9 @@ class QueryLucene:
 	def close_reader(self):
 		self.reader.close()
 
+	def link_tweets(self, results):
+		return [Tweet.load(r['TweetID']) for r in results]
+
 
 if __name__ == '__main__':
 	ql = QueryLucene()

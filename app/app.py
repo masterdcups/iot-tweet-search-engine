@@ -22,16 +22,18 @@ def index():
 	else:
 		user = None
 
-	if query is None:
+	if query is None or query == '':
 		results = []
+		query = ''
 	else:
 		QueryLuceneManager.get_instance().query_parser_must([query])
-		results = QueryLuceneManager.get_instance().get_results(nb_results=10)
+		results = QueryLuceneManager.get_instance().get_results(nb_results=50)
+		results = QueryLuceneManager.get_instance().link_tweets(results)
 
 		if user is not None:
 			results = QueryLuceneManager.get_instance().rerank_results(results, user.vector)
 
-	return render_template('index.html', user=user, results=results)
+	return render_template('index.html', user=user, results=results, query=query)
 
 
 @app.route('/login', methods=['GET'])
