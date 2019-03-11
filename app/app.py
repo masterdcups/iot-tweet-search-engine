@@ -7,6 +7,7 @@ from models.favorite import Favorite
 from models.tweet import Tweet
 from models.user import User
 from query_lucene_manager import QueryLuceneManager
+from recommendation.basic_reco import BasicReco
 
 app = Flask(__name__)
 
@@ -22,18 +23,25 @@ def index():
 	else:
 		user = None
 
+	reco_tweets = []
+
 	if query is None or query == '':
 		results = []
 		query = ''
 	else:
 		QueryLuceneManager.get_instance().query_parser_must([query])
 		results = QueryLuceneManager.get_instance().get_results(nb_results=50)
-		results = QueryLuceneManager.get_instance().link_tweets(results)
 
 		if user is not None:
 			results = QueryLuceneManager.get_instance().rerank_results(results, user.vector)
 
-	return render_template('index.html', user=user, results=results, query=query)
+			# recommendation
+			reco_sys = BasicReco()
+			reco_tweets = reco_sys.recommended_tweets(user)
+		else:
+			results = QueryLuceneManager.get_instance().link_tweets(results)
+
+	return render_template('index.html', user=user, results=results, query=query, reco_tweets=reco_tweets)
 
 
 @app.route('/login', methods=['GET'])

@@ -27,6 +27,45 @@
 
         <div class="row justify-content-center mt-3">
             <div class="col-md-12 mb-2">
+                <h2>Tweets recommendations</h2>
+            </div>
+            {% for tweet in reco_tweets %}
+                <div class="col-md-4 px-1 mb-1">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-md-10">
+                                    <div class="d-flex align-items-center">
+                                        <img src="https://tweetsrepeat.com/assets/no_avatar-016ca1d1808b917d6bdec234906b2226179d811881c725eeb06de7213157c3df.png"
+                                             alt=""
+                                             class="rounded"
+                                             width="32px">
+                                        &nbsp;&nbsp;
+                                        <strong>{{ tweet.user_name }}</strong>
+                                    </div>
+
+                                </div>
+                                <div class="col-md-2 text-right text-warning">
+                                    {% if user is not none %}
+                                        {% if tweet.is_faved(user) %}
+                                            <i class="fas fa-star fav_button" data-tweet-id="{{ tweet.id }}"></i>
+                                        {% else %}
+                                            <i class="far fa-star fav_button" data-tweet-id="{{ tweet.id }}"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">{{ "<br />".join(tweet.text.split("\n")) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="row justify-content-center mt-3">
+            <div class="col-md-12 mb-2">
                 <h2>Query results</h2>
             </div>
             {% for tweet in results %}
