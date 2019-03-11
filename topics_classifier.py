@@ -1,8 +1,9 @@
 import os
 
-import numpy as np
+import pandas as pd
 from joblib import dump, load
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.neighbors import KNeighborsClassifier
 
 from db import DB
 from definitions import ROOT_DIR
@@ -34,7 +35,7 @@ class TopicsClassifier:
 			X.append(i[0])
 			y.append(i[1])
 
-		self.model = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=0)
+		# self.model = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=0)
 		# self.model = SVC(gamma='auto')
 		# self.model = SGDClassifier(max_iter=1000, tol=1e-3, loss='log')
 		# self.model = KNeighborsClassifier(n_neighbors=3)
@@ -60,10 +61,29 @@ class TopicsClassifier:
 
 		return self.model.predict_proba(vector)
 
+	def tweak_hyperparameters(self):
+		X, y = [], []
+		query = DB.get_instance().query(Tweet.vector, Tweet.topic_id).filter('topic_id is not null')
+		for i in query.all():
+			X.append(i[0])
+			y.append(i[1])
+
+		model = KNeighborsClassifier()
+		param_grid = {
+			'n_neighbors': [2, 3, 5, 8, 10, 15, 20],
+			'algorithm': ['auto']
+		}
+
+		clf = GridSearchCV(model, param_grid, n_jobs=-1, cv=3)
+		clf.fit(X, y)
+
+		df = pd.DataFrame(clf.cv_results_)
+		df.to_csv(r'' + 'k_neighbors.txt', index=None, sep=' ')
+
 
 if __name__ == '__main__':
-	print('TopicClassifier')
 	clf = TopicsClassifier()
-	clf.train(limit=100000)
-	clf.save()
-	print(clf.predict(np.zeros(300).reshape(1, -1)))
+	clf.tweak_hyperparameters()
+# clf.train(limit=100000)
+# clf.save()
+# print(clf.predict(np.zeros(300).reshape(1, -1)))
