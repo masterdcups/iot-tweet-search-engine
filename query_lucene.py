@@ -9,9 +9,11 @@ from org.apache.lucene.search import IndexSearcher, BooleanQuery, BooleanClause
 from org.apache.lucene.store import SimpleFSDirectory
 from sklearn.metrics.pairwise import cosine_similarity
 
+from db import DB
 from definitions import ROOT_DIR
 from models.tweet import Tweet
 from parser import Parser
+from profile_oneHotEncoder import ProfileOneHotEncoder
 
 
 class QueryLucene:
@@ -87,27 +89,31 @@ class QueryLucene:
 		hits = self.remove_duplicates(hits)
 		return hits
 
-	def rerank_results(self, results, user_vector):
+	def rerank_results(self, results, user_vector, user_gender, user_location, user_sentiment):
 		"""
 		reranks the results of a query by using the similarity between the user thematic vector and the vector from the tweets
 		:param results: the documents resulting from a query
-		:param userVector: the thematic vector of a user
+		:param user_vector: the thematic vector of a user
+		:param user_gender: the gender of a user
+		:param user_location: the location of a user
+		:param user_sentiment: the sentiment of a user
 		:return: the reranked list of documents
 		"""
 		reranked = []
-
-		if isinstance(user_vector, list):
-			user_vector = np.array(user_vector)
-
+		user_vec = ProfileOneHotEncoder.add_info_to_vec(user_vector, user_gender, user_location,
+		                                                user_sentiment).reshape(1, -1)
 		doc_vectors = self.parser.get_all_vectors(tweet_ids=[int(res["TweetID"]) for res in results])
 		for i in range(len(results)):
-			if int(results[i]['TweetID']) not in doc_vectors:
-				doc_vector = np.zeros(300)
+			doc_infos = DB.get_instance().query(Tweet.vector, Tweet.gender, Tweet.country, Tweet.sentiment).filter_by(
+				id=int(results[i]['TweetID'])).first()
+			if doc_infos is None:
+				reranked.append({'doc': results[i], 'sim': 0.})
 			else:
-				doc_vector = np.array(doc_vectors[int(results[i]['TweetID'])])
-			sim = cosine_similarity(user_vector.reshape(1, -1), doc_vector.reshape(1, -1))
-			reranked.append({'doc': Tweet.load(results[i]['TweetID']), 'sim': sim[0][0]})
-			reranked = sorted(reranked, key=lambda k: k['sim'], reverse=True)
+				doc_vector = ProfileOneHotEncoder.add_info_to_vec(doc_infos[0], doc_infos[1], doc_infos[2],
+				                                                  doc_infos[3]).reshape(1, -1)
+				sim = cosine_similarity(user_vec, doc_vector)
+				reranked.append({'doc': results[i], 'sim': sim[0][0]})
+		reranked = sorted(reranked, key=lambda k: k['sim'], reverse=True)
 		return [x['doc'] for x in reranked]
 
 	def close_reader(self):
@@ -121,6 +127,6 @@ if __name__ == '__main__':
 	ql = QueryLucene()
 	ql.query_parser_must(["First sign of twitter as transport for"])
 	results = ql.get_results()
-	docs = ql.rerank_results(results, np.zeros(300))[:10]
+	docs = ql.rerank_results(results, np.zeros(300), 'male', 'rw', 'neutral')[:10]
 	for doc in docs:
 		print(doc["Text"])
