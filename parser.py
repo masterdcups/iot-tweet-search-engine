@@ -11,7 +11,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from definitions import ROOT_DIR
-from models.tweet import Tweet
 
 
 class Parser:
@@ -102,6 +101,9 @@ class Parser:
 		:param as_np_array: convert the vector into numpy.array
 		:return: vector: list or numpy.array
 		"""
+
+		from models.tweet import Tweet
+
 		if self.session.query(Tweet.vector).filter_by(id=int(tweet_id)).first() is None:
 			return None
 		vector = self.session.query(Tweet.vector).filter_by(id=int(tweet_id)).first()[0]
@@ -118,6 +120,9 @@ class Parser:
 		:param limit: nb of results
 		:return: dict tweet_id -> vector (list)
 		"""
+
+		from models.tweet import Tweet
+
 		query = self.session.query(Tweet.id, Tweet.vector)
 
 		if tweet_ids is not None:

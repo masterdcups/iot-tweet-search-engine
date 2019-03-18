@@ -2,7 +2,6 @@ import numpy as np
 
 from db import DB
 from model_prediction import ModelPrediction
-from models.tweet import Tweet
 
 
 class PredictionProfile:
@@ -30,6 +29,7 @@ class PredictionProfile:
 
 	@staticmethod
 	def _iterator(limit: int = None):
+		from models.tweet import Tweet
 		query = DB.get_instance().query(Tweet.vector, Tweet.sentiment, Tweet.gender, Tweet.country)
 		if limit is not None:
 			query = query.limit(limit)

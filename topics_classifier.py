@@ -6,7 +6,6 @@ from sklearn.ensemble import RandomForestClassifier
 
 from db import DB
 from definitions import ROOT_DIR
-from models.tweet import Tweet
 
 
 class TopicsClassifier:
@@ -25,6 +24,8 @@ class TopicsClassifier:
 		self.model_path = os.path.join(dir_path, TopicsClassifier.model_name)
 
 	def train(self, limit: int = None):
+
+		from models.tweet import Tweet
 
 		X, y = [], []
 		query = DB.get_instance().query(Tweet.vector, Tweet.topic_id).filter('topic_id is not null')

@@ -6,7 +6,6 @@ from sqlalchemy import Column, Text, Integer, ARRAY, Float
 
 from db import DB
 from definitions import ROOT_DIR
-from models.tweet import Tweet
 from prediction_profile import PredictionProfile
 from topics_classifier import TopicsClassifier
 
@@ -51,6 +50,7 @@ class Author(DB.get_base()):
 
 	@staticmethod
 	def create_authors(limit=None):
+		from models.tweet import Tweet
 		tpc = TopicsClassifier(limit=limit)
 		pp = PredictionProfile(limit=limit)
 
