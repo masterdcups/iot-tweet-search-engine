@@ -1,8 +1,7 @@
 import os
 
-import numpy as np
 from joblib import dump, load
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
 
 from db import DB
 from definitions import ROOT_DIR
@@ -27,17 +26,17 @@ class TopicsClassifier:
 	def train(self, limit: int = None):
 
 		X, y = [], []
-		query = DB.get_instance().query(Tweet.vector, Tweet.topic_id).filter('topic_id is not null')
+		query = DB.get_instance().query(Tweet.vector, Tweet.topic_id)
 		if limit is not None:
 			query = query.limit(limit)
 		for i in query.all():
 			X.append(i[0])
 			y.append(i[1])
 
-		self.model = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=0)
+		# self.model = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=0)
 		# self.model = SVC(gamma='auto')
 		# self.model = SGDClassifier(max_iter=1000, tol=1e-3, loss='log')
-		# self.model = KNeighborsClassifier(n_neighbors=3)
+		self.model = KNeighborsClassifier(n_neighbors=3)
 		self.model.fit(X, y)  # probability = True
 
 	def save(self):
@@ -58,10 +57,10 @@ class TopicsClassifier:
 		else:
 			self.load()
 
-		return self.model.predict_proba(vector)
+		return self.model.predict(vector)
 
 
 if __name__ == '__main__':
-	print('TopicClassifier')
-	clf = TopicsClassifier(limit=100)
-	print(clf.predict(np.zeros(300).reshape(1, -1)))
+	clf = TopicsClassifier()
+	clf.train()
+	clf.save()
