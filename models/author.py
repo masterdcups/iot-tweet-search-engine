@@ -3,7 +3,6 @@ import os
 import networkx as nx
 import numpy as np
 from sqlalchemy import Column, Text, Integer, ARRAY, Float
-from sqlalchemy.ext.declarative import declarative_base
 
 from db import DB
 from definitions import ROOT_DIR
@@ -11,10 +10,8 @@ from models.tweet import Tweet
 from prediction_profile import PredictionProfile
 from topics_classifier import TopicsClassifier
 
-Base = declarative_base()
 
-
-class Author(Base):
+class Author(DB.get_base()):
 	__tablename__ = 'authors'
 
 	id = Column(Integer, primary_key=True)
@@ -46,7 +43,6 @@ class Author(Base):
 		"""
 		Update the profile of the user with the new vec param
 		:param vec: (np.array) vector of the tweet to add
-		:param predict: (boolean) whether to predict localisation, gender, etc or not
 		:return:
 		"""
 		self.nb_click += 1

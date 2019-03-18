@@ -1,11 +1,11 @@
 from sqlalchemy import Column, Text, Integer, DateTime, ARRAY, Float, func
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
-Base = declarative_base()
+from db import DB
 
 
-class Tweet(Base):
-	__tablename__ = 'tweets'
+class Tweet(DB.get_base()):
+	__tablename__ = 'tweets'  # todo : change with small corpus # tweets
 
 	id = Column(Integer, primary_key=True)
 	date_created = Column(DateTime, default=func.current_timestamp())
@@ -24,3 +24,12 @@ class Tweet(Base):
 	indication = Column(Text, nullable=True, unique=False)
 	cleaned_text = Column(Text, nullable=True, unique=False)
 	vector = Column(ARRAY(Float), nullable=True, unique=False)
+
+	favs = relationship("Favorite", back_populates='tweet')
+
+	def is_faved(self, user):
+		return user in [fav.user for fav in self.favs]
+
+	@staticmethod
+	def load(tweet_id):
+		return DB.get_instance().query(Tweet).filter_by(id=tweet_id).first()

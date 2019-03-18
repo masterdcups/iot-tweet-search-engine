@@ -63,7 +63,5 @@ class TopicsClassifier:
 
 if __name__ == '__main__':
 	print('TopicClassifier')
-	clf = TopicsClassifier()
-	clf.train(limit=100000)
-	clf.save()
+	clf = TopicsClassifier(limit=100)
 	print(clf.predict(np.zeros(300).reshape(1, -1)))

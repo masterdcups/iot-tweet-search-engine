@@ -1,8 +1,31 @@
+import os
+
+from definitions import ROOT_DIR
 from parser import Parser
 from query_influencer_detection import QueryInfluencerDetection
+from recommendation.basic_reco import BasicReco
 from topics_classifier import TopicsClassifier
+from user import User
 
 if __name__ == '__main__':
+	# create and update user example
+
+	reco = BasicReco()
+	main_user = '4'
+	print(reco.recommended_tweets(main_user))
+
+	exit()
+
+	corpus = Parser.parsing_iot_corpus_pandas(os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v31.tsv'))
+	print('corpus loaded')
+	u = User()
+	u.update_profile(corpus.Vector.values[0], predict=False)
+	u.update_profile(corpus.Vector.values[4], predict=False)
+	u.update_profile(corpus.Vector.values[9], predict=False)
+	print(u)
+	u.save()
+
+	exit()
 	# Sample of getting influencers processus
 
 	parser = Parser()  # instance of parser
