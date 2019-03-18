@@ -1,8 +1,9 @@
 import os
 
+import pandas as pd
 from joblib import dump, load
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -84,12 +85,31 @@ class TopicsClassifier:
 			AdaBoostClassifier(),
 			GaussianNB()]
 
-		f = open("topics_clf_scores.txt", "w+")
+		f = open("topics_svm.txt", "w+")
 		for i in range(len(names)):
 			f.write(names[i] + " : " + str(cross_val_score(classifiers[i], X, y, cv=3).mean()))
 		f.close()
 
+	def tweak_hyperparameters(self):
+		X, y = [], []
+		query = DB.get_instance().query(Tweet.vector, Tweet.topic_id)
+		if self.limit is not None:
+			query = query.limit(self.limit)
+		for i in query.all():
+			X.append(i[0])
+			y.append(i[1])
+
+		tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4], 'C': [1, 10, 100, 1000]},
+		                    {'kernel': ['linear'], 'C': [1, 10, 100, 1000]}]
+
+		clf = GridSearchCV(SVC(), tuned_parameters, n_jobs=-1, cv=3)
+		clf.fit(X, y)
+
+		df = pd.DataFrame(clf.cv_results_)
+		print('results of cross-validation :', df)
+		df.to_csv(r'' + 'topics_svm.txt', index=None, sep=' ')
+
 
 if __name__ == '__main__':
 	clf = TopicsClassifier(limit=10000)
-	clf.compare_classifiers()
+	clf.tweak_hyperparameters()
