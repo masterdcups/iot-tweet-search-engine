@@ -105,7 +105,7 @@ def mark_view():
 		user.remove_favorite(tweet)
 	else:
 		view = Favorite(user_id=user.id, tweet_id=tweet.id)
-		# user.update_profile(np.array(tweet.vector)) # todo
+		user.update_profile(np.array(tweet.vector))
 		DB.get_instance().add(view)
 		state = 'added'
 

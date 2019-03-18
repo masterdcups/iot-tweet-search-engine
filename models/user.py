@@ -19,7 +19,7 @@ class User(DB.get_base()):
 	localisation = Column(Text, nullable=True, unique=False)
 	gender = Column(Text, nullable=True, unique=False)
 	emotion = Column(Text, nullable=True, unique=False)
-	topic_vector = Column(ARRAY(Float), nullable=True, unique=False)
+	topic = Column(Integer, nullable=True, unique=False)
 	username = Column(String, nullable=False, unique=True)
 	password = Column(String, nullable=False, unique=False)
 

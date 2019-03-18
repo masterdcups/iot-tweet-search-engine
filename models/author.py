@@ -20,7 +20,7 @@ class Author(DB.get_base()):
 	localisation = Column(Text, nullable=True, unique=False)
 	gender = Column(Text, nullable=True, unique=False)
 	emotion = Column(Text, nullable=True, unique=False)
-	topic_vector = Column(ARRAY(Float), nullable=True, unique=False)
+	topic = Column(Integer, nullable=True, unique=False)
 	centrality = Column(Float, nullable=True, unique=False)
 	name = Column(Text, nullable=True, unique=False)
 
