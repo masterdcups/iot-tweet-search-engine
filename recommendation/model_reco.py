@@ -1,11 +1,12 @@
 import os
 
 import numpy as np
-from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import train_test_split
+import pandas as pd
+from sklearn.metrics import mean_absolute_error, accuracy_score
 
+from db import DB
 from definitions import ROOT_DIR
-from parser import Parser
+from models.tweet import Tweet
 from recommendation.models.gmf_model import GMFModel
 from recommendation.models.mf_model import MFModel
 from recommendation.models.neumf_model import NeuMFModel
@@ -15,7 +16,9 @@ from recommendation.models.nnmf_model import NNMFModel
 class ModelReco:
 
 	def __init__(self, method, batch_size=256, num_negatives=4, num_factors_user=8, num_factors_item=8, regs=None,
-				 nb_epochs=1):
+				 nb_epochs=1, limit=None):
+		assert method in ["gmf", "mf", "neumf", "nnmf"]
+
 		if regs is None:
 			regs = [0, 0]
 		self.method = method
@@ -30,9 +33,9 @@ class ModelReco:
 		self.num_users = None
 		self.num_tweets = None
 		self.model = None
+		self.limit = limit
 
-	def load_corpus(self, corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-vector-v31.tsv'),
-					like_rt_graph=os.path.join(ROOT_DIR, 'corpus/like_rt_graph.adj')):
+	def load_corpus(self):
 		"""
 		Load the corpus and the Favorite/RT adjancy matrix
 		:param corpus_path: absolute path
@@ -40,42 +43,17 @@ class ModelReco:
 		:return: pd.DataFrame object
 		"""
 
-		original_corpus = Parser.parsing_base_corpus_pandas(corpus_path, categorize=True)
+		self.test_corpus = pd.read_csv(os.path.join(ROOT_DIR, 'corpus/model_reco/test_corpus.csv'))
+		self.train_corpus = pd.read_csv(os.path.join(ROOT_DIR, 'corpus/model_reco/train_corpus.csv'))
 
-		self.num_users = len(original_corpus.User_Name.unique())
-		self.num_tweets = len(original_corpus.TweetID.unique())
+		# self.test_corpus = self.test_corpus[self.test_corpus == 1]
+		# self.train_corpus = self.train_corpus[self.train_corpus == 1]
 
-		corpus = original_corpus[['User_ID_u', 'TweetID_u']]
+		self.corpus = pd.concat([self.train_corpus, self.test_corpus], ignore_index=True)
 
-		like_rt_file = open(like_rt_graph, 'r')
-		for line in like_rt_file:
-			parts = line[:-1].split(' ')
-			user_name = parts[0]
-			user_id = original_corpus[original_corpus.User_Name == user_name].User_ID_u.iloc[0]
-			tweets = parts[1:]  # like or RT tweets
+		self.num_users = len(self.corpus.user_id.unique())
+		self.num_tweets = len(self.corpus.id.unique())
 
-			for tweet in tweets:
-				if len(original_corpus[original_corpus.TweetID == int(tweet)]) > 0:
-					tweet_id = original_corpus[original_corpus.TweetID == int(tweet)].TweetID_u.iloc[0]
-
-					corpus = corpus.append({'User_ID_u': user_id, 'TweetID_u': tweet_id}, ignore_index=True)
-
-		like_rt_file.close()
-
-		corpus['Rating'] = 1
-
-		for index, line in corpus.iterrows():
-			u = line.User_ID_u
-
-			# negative instances
-			for t in range(self.num_negatives):
-				j = np.random.randint(self.num_tweets)
-				while (u, j) in corpus[['User_ID_u', 'TweetID_u']]:
-					j = np.random.randint(self.num_tweets)
-
-				corpus = corpus.append({'User_ID_u': u, 'TweetID_u': j, 'Rating': 0}, ignore_index=True)
-
-		self.train_corpus, self.test_corpus = train_test_split(corpus, test_size=0.2)
 		return self.train_corpus, self.test_corpus
 
 	def create_model(self):
@@ -101,7 +79,7 @@ class ModelReco:
 
 		self.model.compile('adam', 'mean_squared_error')
 
-	def train(self, save=False):
+	def train(self, save=False, display_metrics=False, train_all=False):
 		"""
 		Train the model
 		:param save: boolean : save the model into a file
@@ -110,12 +88,20 @@ class ModelReco:
 		assert self.train_corpus is not None
 
 		for e in range(self.nb_epochs):
-			self.model.fit([self.train_corpus.User_ID_u, self.train_corpus.TweetID_u],  # input
-						   self.train_corpus.Rating,  # labels
-						   batch_size=self.batch_size, epochs=1, verbose=0, shuffle=True)
+			if train_all:
+				self.model.fit([self.corpus.user_id, self.corpus.id],  # input
+							   self.corpus.rating,  # labels
+							   batch_size=self.batch_size, epochs=1, verbose=0, shuffle=True)
+			else:
+				self.model.fit([self.train_corpus.user_id, self.train_corpus.id],  # input
+							   self.train_corpus.rating,  # labels
+							   batch_size=self.batch_size, epochs=1, verbose=0, shuffle=True)
 
 			if save:
-				m.save(epoch=e)
+				self.save(epoch=e)
+			if display_metrics:
+				y_pred = self.predict()
+				self.metrics(y_pred, epoch=e)
 
 	def save(self, model_out_file=None, out_dir=os.path.join(ROOT_DIR, 'saved_models/reco_models'), epoch=0):
 		"""
@@ -140,47 +126,58 @@ class ModelReco:
 		f.write(yaml_string)
 		f.close()
 
+	def get_reco(self, user, k_best=5):
+		# from models.favorite import Favorite
+		print(user.favs)
+		# tweets that the user didn't fav
+		negatives = [t[0] for t in
+					 DB.get_instance().query(Tweet.id).filter(Tweet.id.notin_([f.tweet_id for f in user.favs])).all()]
+
+		users = np.full(len(negatives), self.num_users + user.id, dtype='int32')
+		predictions = self.model.predict([users, np.array(negatives)])
+
+		predictions_map = []
+		predictions = predictions.flatten()
+		for i in range(len(predictions)):
+			predictions_map.append({'tweet': negatives[i], 'predict': predictions[i]})
+
+		print(predictions_map)
+
+		predictions_map = sorted(predictions_map, key=lambda k: k['predict'], reverse=True)
+		recommended_tweets = [Tweet.load(t['tweet']) for t in predictions_map[:k_best]]
+		return recommended_tweets
+
 	def predict(self):
 		"""
 		Predict values based on test corpus
 		:return: predictions, 1-d array
 		"""
-		return self.model.predict([self.test_corpus.User_ID_u, self.test_corpus.TweetID_u])
 
-	def mae_metric(self, predictions):
+		return self.model.predict([self.test_corpus.user_id, self.test_corpus.id])
+
+	def metrics(self, predictions, epoch=None):
 		"""
 		Return the MAE metrics based on predictions
 		:param predictions:
 		:return:
 		"""
-		y_true = self.test_corpus.Rating
-		y_hat = np.round(predictions, 0)
+		y_true = self.test_corpus.rating
+		y_pred = np.round(predictions, 0)
 
-		mae = mean_absolute_error(y_true, y_hat)
-		return mae
+		mae = mean_absolute_error(y_true, y_pred)
+		acc = accuracy_score(y_true, y_pred)
+		print('MAE', (('| epoch ' + str(epoch)) if epoch is not None else ''), self.method, mae)
+		print('ACC', (('| epoch ' + str(epoch)) if epoch is not None else ''), self.method, acc)
+		return mae, acc
 
 
 if __name__ == '__main__':
 	for method in ["gmf", "mf", "neumf", "nnmf"]:
 		m = ModelReco(method)
-		m.load_corpus(corpus_path=os.path.join(ROOT_DIR, 'corpus/iot-tweets-2009-2016-completv3.tsv'),
-					  like_rt_graph=os.path.join(ROOT_DIR, 'corpus/likes_matrix.tsv'))
+		m.load_corpus()
 		m.create_model()
 		m.train()
 		m.save()
 
 		pred = m.predict()
-		print('MAE ', method, m.mae_metric(pred))
-
-# users = np.full(len(negatives), main_user, dtype='int32')
-# predictions = model.predict([users, np.array(negatives)], batch_size=100, verbose=0)
-#
-# predictions_map = []
-# predictions = predictions.flatten()
-# for i in range(len(predictions)):
-# 	predictions_map.append({'tweet': negatives[i], 'predict': predictions[i]})
-#
-# predictions_map = sorted(predictions_map, key=lambda k: k['predict'], reverse=True)
-# k_first = 5
-# recommended_tweets = [t['tweet'] for t in predictions_map[:k_first]]
-# print(recommended_tweets)
+		print('MAE ', method, m.metrics(pred))

@@ -5,7 +5,7 @@ from db import DB
 
 
 class Tweet(DB.get_base()):
-	__tablename__ = 'tweets_all'  # todo : change with small corpus # tweets
+	__tablename__ = 'tweets'  # todo : change with small corpus # tweets
 
 	id = Column(Integer, primary_key=True)
 	date_created = Column(DateTime, default=func.current_timestamp())
