@@ -9,7 +9,6 @@ from org.apache.lucene.search import IndexSearcher, BooleanQuery, BooleanClause
 from org.apache.lucene.store import SimpleFSDirectory
 from sklearn.metrics.pairwise import cosine_similarity
 
-from db import DB
 from definitions import ROOT_DIR
 from models.tweet import Tweet
 from parser import Parser
@@ -102,17 +101,15 @@ class QueryLucene:
 		reranked = []
 		user_vec = ProfileOneHotEncoder.add_info_to_vec(user_vector, user_gender, user_location,
 		                                                user_sentiment).reshape(1, -1)
-		doc_vectors = self.parser.get_all_vectors(tweet_ids=[int(res["TweetID"]) for res in results])
 		for i in range(len(results)):
-			doc_infos = DB.get_instance().query(Tweet.vector, Tweet.gender, Tweet.country, Tweet.sentiment).filter_by(
-				id=int(results[i]['TweetID'])).first()
+			doc_infos = Tweet.load(int(results[i]['TweetID']))
 			if doc_infos is None:
 				reranked.append({'doc': results[i], 'sim': 0.})
 			else:
-				doc_vector = ProfileOneHotEncoder.add_info_to_vec(doc_infos[0], doc_infos[1], doc_infos[2],
-				                                                  doc_infos[3]).reshape(1, -1)
+				doc_vector = ProfileOneHotEncoder.add_info_to_vec(doc_infos.vector, doc_infos.gender, doc_infos.country,
+				                                                  doc_infos.sentiment).reshape(1, -1)
 				sim = cosine_similarity(user_vec, doc_vector)
-				reranked.append({'doc': results[i], 'sim': sim[0][0]})
+				reranked.append({'doc': doc_infos, 'sim': sim[0][0]})
 		reranked = sorted(reranked, key=lambda k: k['sim'], reverse=True)
 		return [x['doc'] for x in reranked]
 

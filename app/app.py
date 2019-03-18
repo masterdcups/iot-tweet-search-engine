@@ -33,7 +33,8 @@ def index():
 		results = QueryLuceneManager.get_instance().get_results(nb_results=50)
 
 		if user is not None:
-			results = QueryLuceneManager.get_instance().rerank_results(results, user.vector)
+			results = QueryLuceneManager.get_instance().rerank_results(results, user.vector, user.gender,
+			                                                           user.localisation, user.emotion)
 
 			# recommendation
 			reco_sys = BasicReco()
@@ -80,9 +81,9 @@ def logout():
 @app.route('/signup', methods=['POST'])
 def create_user():
 	user = User(username=request.form.get('username'),
-				password=pbkdf2_sha256.encrypt(request.form.get('password'), rounds=200000, salt_size=16),
-				vector=np.zeros(300),
-				nb_click=0)
+	            password=pbkdf2_sha256.encrypt(request.form.get('password'), rounds=200000, salt_size=16),
+	            vector=np.zeros(300),
+	            nb_click=0)
 
 	DB.get_instance().add(user)
 	DB.get_instance().commit()
