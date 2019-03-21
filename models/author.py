@@ -33,10 +33,10 @@ class Author(DB.get_base()):
 		:return:
 		"""
 
-		self.localisation = prediction_profile.country_prediction(self.vector)
-		self.gender = prediction_profile.gender_prediction(self.vector)
-		self.emotion = prediction_profile.sentiment_prediction(self.vector)
-		self.topic_vector = topics_classifier.predict(self.vector.reshape(1, -1))[0]
+		self.localisation = prediction_profile.country_prediction(np.array(self.vector))
+		self.gender = prediction_profile.gender_prediction(np.array(self.vector))
+		self.emotion = prediction_profile.sentiment_prediction(np.array(self.vector))
+		self.topic = int(topics_classifier.predict(np.array(self.vector).reshape(1, -1))[0])
 
 	def update_profile(self, vec):
 		"""
@@ -54,8 +54,7 @@ class Author(DB.get_base()):
 		tpc = TopicsClassifier(limit=limit)
 		pp = PredictionProfile(limit=limit)
 
-		query = DB.get_instance().query(Tweet.user_id, Tweet.vector, Tweet.user_name).filter(
-			'user_id is not null')
+		query = DB.get_instance().query(Tweet.user_id, Tweet.vector, Tweet.user_name)
 
 		if limit is not None:
 			query = query.limit(limit)
@@ -71,10 +70,14 @@ class Author(DB.get_base()):
 				DB.get_instance().add(a)
 			a.update_profile(np.array(t.vector))
 
-		graph = Author.load_graph()
-		centralities = nx.eigenvector_centrality(graph)
+		DB.get_instance().commit()
+
+		print('Authors created')
+
+		# graph = Author.load_graph()
+		# centralities = nx.eigenvector_centrality(graph)
 		for author in DB.get_instance().query(Author).all():
-			author.centrality = centralities[author.name] if author.name in centralities else 0.
+			# author.centrality = centralities[author.name] if author.name in centralities else 0.
 			author.predict_profile(tpc, pp)
 		DB.get_instance().commit()
 
@@ -84,4 +87,4 @@ class Author(DB.get_base()):
 
 
 if __name__ == '__main__':
-	Author.create_authors(limit=50)
+	Author.create_authors()

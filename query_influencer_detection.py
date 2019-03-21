@@ -8,7 +8,7 @@ from models.author import Author
 class QueryInfluencerDetection:
 
 	def __init__(self):
-		self.topic_vector = None
+		self.topic = None
 		self.authors = DB.get_instance().query(Author).all()
 		self.users_topic_vec = [u.topic_vector for u in self.authors]
 

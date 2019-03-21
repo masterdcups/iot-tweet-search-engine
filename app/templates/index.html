@@ -2,105 +2,115 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="row justify-content-center">
-        <div class="col-md-8 mt-5 mb-3">
-            <form action="/" method="get" class="mt-3">
-                <div class="input-group">
-                    <input type="text" class="form-control form-control-lg" name="query" placeholder="Query"
-                           value="{{ query }}">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary">Submit</button>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 mt-5 mb-3">
+                <form action="/" method="get" class="mt-3">
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-lg" name="query" placeholder="Query"
+                               value="{{ query }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary">Submit</button>
+                        </div>
                     </div>
-                </div>
 
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
     {% if results|length > 0 %}
 
-        <div class="row justify-content-center mt-3">
+        <!--<div class="row justify-content-center mt-3">
             <div class="col-md-12 mb-2">
                 <h2>Influencers</h2>
             </div>
-        </div>
+        </div>-->
 
         <div class="row justify-content-center mt-3">
-            <div class="col-md-12 mb-2">
-                <h2>Tweets recommendations</h2>
+            <div class="container">
+                <div class="col-md-12 mb-2">
+                    <h2>Tweets recommendations</h2>
+                </div>
             </div>
-            {% for tweet in reco_tweets %}
-                <div class="col-md-4 px-1 mb-1">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row mb-2">
-                                <div class="col-md-10">
-                                    <div class="d-flex align-items-center">
-                                        <img src="https://tweetsrepeat.com/assets/no_avatar-016ca1d1808b917d6bdec234906b2226179d811881c725eeb06de7213157c3df.png"
-                                             alt=""
-                                             class="rounded"
-                                             width="32px">
-                                        &nbsp;&nbsp;
-                                        <strong>{{ tweet.user_name }}</strong>
-                                    </div>
 
-                                </div>
-                                <div class="col-md-2 text-right text-warning">
-                                    {% if user is not none %}
-                                        {% if tweet.is_faved(user) %}
-                                            <i class="fas fa-star fav_button" data-tweet-id="{{ tweet.id }}"></i>
-                                        {% else %}
-                                            <i class="far fa-star fav_button" data-tweet-id="{{ tweet.id }}"></i>
+            <div class="recommended_tweets d-flex align-items-center">
+                {% for tweet in reco_tweets %}
+                    <div class="col-md-4 px-1 mb-1 tweet">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-md-10">
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://tweetsrepeat.com/assets/no_avatar-016ca1d1808b917d6bdec234906b2226179d811881c725eeb06de7213157c3df.png"
+                                                 alt=""
+                                                 class="rounded"
+                                                 width="32px">
+                                            &nbsp;&nbsp;
+                                            <strong>{{ tweet.user_name }}</strong>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-2 text-right text-warning">
+                                        {% if user is not none %}
+                                            {% if tweet.is_faved(user) %}
+                                                <i class="fas fa-star fav_button" data-tweet-id="{{ tweet.id }}"></i>
+                                            {% else %}
+                                                <i class="far fa-star fav_button" data-tweet-id="{{ tweet.id }}"></i>
+                                            {% endif %}
                                         {% endif %}
-                                    {% endif %}
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-12">{{ "<br />".join(tweet.text.split("\n")) }}</div>
+                                <div class="row">
+                                    <div class="col-md-12">{{ "<br />".join(tweet.text.split("\n")) }}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
+
         </div>
 
-        <div class="row justify-content-center mt-3">
-            <div class="col-md-12 mb-2">
-                <h2>Query results</h2>
-            </div>
-            {% for tweet in results %}
-                <div class="col-md-4 px-1 mb-1">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row mb-2">
-                                <div class="col-md-10">
-                                    <div class="d-flex align-items-center">
-                                        <img src="https://tweetsrepeat.com/assets/no_avatar-016ca1d1808b917d6bdec234906b2226179d811881c725eeb06de7213157c3df.png"
-                                             alt=""
-                                             class="rounded"
-                                             width="32px">
-                                        &nbsp;&nbsp;
-                                        <strong>{{ tweet.user_name }}</strong>
-                                    </div>
+        <div class="container">
+            <div class="row justify-content-center mt-3">
+                <div class="col-md-12 mb-2">
+                    <h2>Query results</h2>
+                </div>
+                {% for tweet in results %}
+                    <div class="col-md-4 px-1 mb-1">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-md-10">
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://tweetsrepeat.com/assets/no_avatar-016ca1d1808b917d6bdec234906b2226179d811881c725eeb06de7213157c3df.png"
+                                                 alt=""
+                                                 class="rounded"
+                                                 width="32px">
+                                            &nbsp;&nbsp;
+                                            <strong>{{ tweet.user_name }}</strong>
+                                        </div>
 
-                                </div>
-                                <div class="col-md-2 text-right text-warning">
-                                    {% if user is not none %}
-                                        {% if tweet.is_faved(user) %}
-                                            <i class="fas fa-star fav_button" data-tweet-id="{{ tweet.id }}"></i>
-                                        {% else %}
-                                            <i class="far fa-star fav_button" data-tweet-id="{{ tweet.id }}"></i>
+                                    </div>
+                                    <div class="col-md-2 text-right text-warning">
+                                        {% if user is not none %}
+                                            {% if tweet.is_faved(user) %}
+                                                <i class="fas fa-star fav_button" data-tweet-id="{{ tweet.id }}"></i>
+                                            {% else %}
+                                                <i class="far fa-star fav_button" data-tweet-id="{{ tweet.id }}"></i>
+                                            {% endif %}
                                         {% endif %}
-                                    {% endif %}
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-12">{{ tweet.text }}</div>
+                                <div class="row">
+                                    <div class="col-md-12">{{ tweet.text }}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
     {% endif %}
 

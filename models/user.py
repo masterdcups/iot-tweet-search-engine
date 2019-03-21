@@ -46,7 +46,7 @@ class User(DB.get_base()):
 		self.localisation = prediction_profile.country_prediction(self.vector)
 		self.gender = prediction_profile.gender_prediction(self.vector)
 		self.emotion = prediction_profile.sentiment_prediction(self.vector)
-		self.topic_vector = topics_classifier.predict(self.vector.reshape(1, -1))[0]
+		self.topic = topics_classifier.predict(self.vector.reshape(1, -1))[0]
 
 	def remove_favorite(self, tweet):
 

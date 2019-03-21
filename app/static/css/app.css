@@ -1,1 +1,13 @@
+.recommended_tweets {
+    width: 100%;
+    white-space: nowrap;
+    overflow-y: hidden;
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+}
 
+.recommended_tweets .tweet {
+    white-space: initial;
+    display: inline-block;
+    overflow: hidden;
+}

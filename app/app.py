@@ -1,5 +1,6 @@
 import numpy as np
 from flask import Flask, render_template, session, request, redirect, url_for
+from flask_scss import Scss
 from passlib.handlers.pbkdf2 import pbkdf2_sha256
 
 from db import DB
@@ -10,6 +11,7 @@ from query_lucene_manager import QueryLuceneManager
 from recommendation.basic_reco import BasicReco
 
 app = Flask(__name__)
+Scss(app)
 
 app.session_type = 'filesystem'
 app.secret_key = b'L\xac\xc9\xf8\xb5\xd95\x86}\xe0V\x89\x0fN\xc9#\x13qZ-\x8e\xb8R\xef'
@@ -102,10 +104,10 @@ def mark_view():
 
 	if tweet.is_faved(user):
 		state = 'removed'
-		user.remove_favorite(tweet)
+	# user.remove_favorite(tweet)
 	else:
 		view = Favorite(user_id=user.id, tweet_id=tweet.id)
-		user.update_profile(np.array(tweet.vector))
+		# user.update_profile(np.array(tweet.vector))
 		DB.get_instance().add(view)
 		state = 'added'
 
