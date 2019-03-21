@@ -24,8 +24,16 @@ class Author(DB.get_base()):
 	name = Column(Text, nullable=True, unique=False)
 
 	@staticmethod
-	def load(author_id):
-		return DB.get_instance().query(Author).filter_by(id=author_id).first()
+	def load(user_id=None, user_name=None):
+		assert user_id is not None or user_name is not None
+
+		u = None
+		if user_id is not None:
+			u = DB.get_instance().query(Author).filter_by(id=user_id).first()
+		elif user_name is not None:
+			u = DB.get_instance().query(Author).filter_by(name=user_name).first()
+
+		return u
 
 	def predict_profile(self, topics_classifier, prediction_profile):
 		"""
@@ -60,7 +68,7 @@ class Author(DB.get_base()):
 			query = query.limit(limit)
 
 		for t in query.all():
-			a = Author.load(t.user_id)
+			a = Author.load(user_name=t.user_name)
 			if a is None:
 				a = Author()
 				a.id = t.user_id
@@ -69,8 +77,7 @@ class Author(DB.get_base()):
 				a.vector = np.zeros(300)
 				DB.get_instance().add(a)
 			a.update_profile(np.array(t.vector))
-
-		DB.get_instance().commit()
+			DB.get_instance().commit()
 
 		print('Authors created')
 
@@ -79,7 +86,7 @@ class Author(DB.get_base()):
 		for author in DB.get_instance().query(Author).all():
 			# author.centrality = centralities[author.name] if author.name in centralities else 0.
 			author.predict_profile(tpc, pp)
-		DB.get_instance().commit()
+			DB.get_instance().commit()
 
 	@staticmethod
 	def load_graph(filename=os.path.join(ROOT_DIR, 'corpus/followers_matrix.tsv')):
@@ -87,4 +94,4 @@ class Author(DB.get_base()):
 
 
 if __name__ == '__main__':
-	Author.create_authors()
+	Author.create_authors(limit=10)

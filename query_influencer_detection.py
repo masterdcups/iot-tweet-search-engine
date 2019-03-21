@@ -12,12 +12,11 @@ class QueryInfluencerDetection:
 		:param nb_users: (int) percentage of users considered
 		:return: a sorted array of authors based on their centrality
 		"""
-		authors = DB.get_instance().query(Author).filter(Author.topic == topic).order_by(
-			Author.centrality.amount.desc()).limit(nb_users)
-
-		return [x for x in authors.all()]
+		return DB.get_instance().query(Author).filter(Author.topic == topic).order_by(
+			Author.centrality).limit(nb_users)
 
 
 if __name__ == '__main__':
+
 	for a in QueryInfluencerDetection.get_influencers(1):
 		print(a.name)

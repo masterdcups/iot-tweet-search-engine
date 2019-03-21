@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Text, Integer, DateTime, ARRAY, Float, func
-from sqlalchemy.orm import relationship
 
 from db import DB
 
@@ -25,7 +24,7 @@ class Tweet(DB.get_base()):
 	cleaned_text = Column(Text, nullable=True, unique=False)
 	vector = Column(ARRAY(Float), nullable=True, unique=False)
 
-	favs = relationship("Favorite", back_populates='tweet')
+	# favs = relationship("Favorite", back_populates='tweet')
 
 	def is_faved(self, user):
 		return user in [fav.user for fav in self.favs]
