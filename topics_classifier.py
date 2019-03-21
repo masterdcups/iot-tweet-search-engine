@@ -1,8 +1,14 @@
 import os
 
-import numpy as np
+import pandas as pd
 from joblib import dump, load
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.model_selection import cross_val_score, GridSearchCV
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
 
 from db import DB
 from definitions import ROOT_DIR
@@ -61,10 +67,55 @@ class TopicsClassifier:
 
 		return self.model.predict(vector)
 
+	def compare_classifiers(self):
+		from models.tweet import Tweet
+
+		X, y = [], []
+		query = DB.get_instance().query(Tweet.vector, Tweet.topic_id)
+		if self.limit is not None:
+			query = query.limit(self.limit)
+		for i in query.all():
+			X.append(i[0])
+			y.append(i[1])
+
+		names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Decision Tree",
+		         "Random Forest", "AdaBoost", "Naive Bayes"]
+		classifiers = [
+			KNeighborsClassifier(3),
+			SVC(kernel="linear", C=0.025),
+			SVC(gamma=2, C=1),
+			DecisionTreeClassifier(max_depth=5),
+			RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
+			AdaBoostClassifier(),
+			GaussianNB()]
+
+		f = open("topics_svm.txt", "w+")
+		for i in range(len(names)):
+			f.write(names[i] + " : " + str(cross_val_score(classifiers[i], X, y, cv=3).mean()))
+		f.close()
+
+	def tweak_hyperparameters(self):
+		from models.tweet import Tweet
+
+		X, y = [], []
+		query = DB.get_instance().query(Tweet.vector, Tweet.topic_id)
+		if self.limit is not None:
+			query = query.limit(self.limit)
+		for i in query.all():
+			X.append(i[0])
+			y.append(i[1])
+
+		tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4], 'C': [1, 10, 100, 1000]},
+		                    {'kernel': ['linear'], 'C': [1, 10, 100, 1000]}]
+
+		clf = GridSearchCV(SVC(), tuned_parameters, n_jobs=-1, cv=3)
+		clf.fit(X, y)
+
+		df = pd.DataFrame(clf.cv_results_)
+		print('results of cross-validation :', df)
+		df.to_csv(r'' + 'topics_svm.txt', index=None, sep=' ')
+
 
 if __name__ == '__main__':
-	print('TopicClassifier')
-	clf = TopicsClassifier()
-	clf.train()
-	clf.save()
-	print(clf.predict(np.zeros(300).reshape(1, -1)))
+	clf = TopicsClassifier(limit=10000)
+	clf.tweak_hyperparameters()

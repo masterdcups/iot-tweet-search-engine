@@ -1,39 +1,23 @@
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-
 from db import DB
 from models.author import Author
 
 
 class QueryInfluencerDetection:
 
-	def __init__(self):
-		self.topic = None
-		self.authors = DB.get_instance().query(Author).all()
-		self.users_topic_vec = [u.topic_vector for u in self.authors]
-
-	def get_influencers(self, topic_vector, percentage_top_user=.5):
+	@staticmethod
+	def get_influencers(topic, nb_users=5):
 		"""
-		Return the most central users (influencers) among the X% users most related to the topic
-		:param topic_vector: (np.array) vector of topic probabilities
-		:param percentage_top_user: (float) percentage of users considered
-		:return: a sorted array of
+		Return the X most central authors (influencers) related to the topic
+		:param topic: (int) topic of the user
+		:param nb_users: (int) percentage of users considered
+		:return: a sorted array of authors based on their centrality
 		"""
+		authors = DB.get_instance().query(Author).filter(Author.topic == topic).order_by(
+			Author.centrality.amount.desc()).limit(nb_users)
 
-		cosine_sim = cosine_similarity(self.users_topic_vec, topic_vector.reshape(1, -1))
-
-		results = []
-		for i in range(len(cosine_sim)):
-			results.append(
-				{'user_id': self.authors[i].id, 'sim': cosine_sim[i][0], 'centrality': self.authors[i].centrality})
-
-		results = sorted(results, key=lambda k: k['sim'], reverse=True)
-		top_candidates = results[:int(len(results) * percentage_top_user)]
-		return [x['user_id'] for x in sorted(top_candidates, key=lambda k: k['centrality'], reverse=True)]
+		return [x for x in authors.all()]
 
 
 if __name__ == '__main__':
-	qid = QueryInfluencerDetection()
-	influencers = qid.get_influencers(
-		np.array([0.12885133, 0.06695192, 0.22134557, 0.32720134, 0.08761362, 0.16803622]))
-	print(influencers)
+	for a in QueryInfluencerDetection.get_influencers(1):
+		print(a.name)
